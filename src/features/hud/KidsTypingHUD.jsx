@@ -198,56 +198,6 @@ export const KidsTypingHUD = memo(function KidsTypingHUD() {
           </button>
         </div>
       </div>
-
-      {/* Subtle Game Paused Overlay Banner */}
-      {isPaused && (
-        <div style={{
-          position: 'fixed',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          background: 'rgba(15, 23, 42, 0.78)',
-          backdropFilter: 'blur(16px)',
-          border: '1px solid rgba(255, 255, 255, 0.2)',
-          borderRadius: '5px',
-          padding: '32px 52px',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: '14px',
-          pointerEvents: 'auto',
-          zIndex: 100,
-          boxShadow: '0 20px 50px rgba(0, 0, 0, 0.6)',
-          fontFamily: `system-ui, -apple-system, sans-serif`
-        }}>
-          <div style={{ fontSize: '34px' }}>⏸</div>
-          <div style={{ fontSize: '24px', fontWeight: 800, color: '#ffffff', letterSpacing: '0.5px' }}>
-            Game Paused
-          </div>
-          <div style={{ fontSize: '14px', color: '#94a3b8', fontWeight: 500, textAlign: 'center' }}>
-            Press <strong style={{ color: '#38bdf8' }}>Ctrl + Enter</strong> or click Resume below to continue typing!
-          </div>
-          <button
-            onClick={togglePaused}
-            style={{
-              marginTop: '10px',
-              background: 'rgba(34, 197, 94, 0.25)',
-              border: '1px solid #22c55e',
-              borderRadius: '5px',
-              padding: '10px 32px',
-              color: '#4ade80',
-              fontWeight: 700,
-              fontSize: '15px',
-              cursor: 'pointer',
-              outline: 'none',
-              boxShadow: '0 0 20px rgba(34, 197, 94, 0.35)',
-              transition: 'all 0.2s'
-            }}
-          >
-            ▶ Resume Game
-          </button>
-        </div>
-      )}
     </>
   );
 });
