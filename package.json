@@ -4,6 +4,10 @@
   "type": "module",
   "version": "3.1.0",
   "description": "3D Space Exploration Game with Electron, React, and Three.js featuring sleek holographic overlays and an interactive Quantum Cosmic Orb.",
+  "author": {
+    "name": "Saboor Hamedi",
+    "email": "saboor@cosmicmorble.app"
+  },
   "main": "dist-electron/main.js",
   "scripts": {
     "dev": "vite",
