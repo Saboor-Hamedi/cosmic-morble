@@ -110,9 +110,11 @@ const FloatingWaterOrbItem = React.memo(function FloatingWaterOrbItem({ balloon:
 
   const displayText = capsLock ? item.text.toUpperCase() : item.text.toLowerCase();
   
-  // Strictly equal width and height (`width and height are strictly 1:1:1 round`)
+  // For letters: strictly equal width and height (`1:1:1 round`). For words: wider, spacious rounded water capsule (`1.35x width`) so words fit beautifully!
   const baseScale = (item.scale || 0.45) * 2.3;
-  const uniformScale = [baseScale, baseScale, baseScale];
+  const uniformScale = item.shapeType === 'word_capsule'
+    ? [baseScale * 1.35, baseScale * 0.95, baseScale * 0.95]
+    : [baseScale, baseScale, baseScale];
 
   const orbColor = item.color || theme.bubbleColor || '#38bdf8';
 
@@ -128,36 +130,16 @@ const FloatingWaterOrbItem = React.memo(function FloatingWaterOrbItem({ balloon:
       <mesh renderOrder={0} castShadow={false} receiveShadow={false}>
         <sphereGeometry args={[0.74, 32, 32]} />
         <meshStandardMaterial
-          color={orbColor}
-          emissive={orbColor}
-          emissiveIntensity={hovered ? 0.9 : 0.4}
+          color={item.powerUpType === 'rainbow' ? '#ff00ff' : item.powerUpType === 'freeze' ? '#00f0ff' : item.powerUpType === 'starburst' ? '#ffaa00' : orbColor}
+          emissive={item.powerUpType === 'rainbow' ? '#ff00ff' : item.powerUpType === 'freeze' ? '#00f0ff' : item.powerUpType === 'starburst' ? '#ffaa00' : orbColor}
+          emissiveIntensity={item.powerUpType ? 1.0 : (hovered ? 0.9 : 0.4)}
           transparent
-          opacity={hovered ? 0.35 : 0.15}
+          opacity={item.powerUpType ? 0.45 : (hovered ? 0.35 : 0.15)}
           depthWrite={false}
         />
       </mesh>
 
-      {/* Superpower Aura Ring (`if this bubble holds a superpower`) */}
-      {item.powerUpType && (
-        <mesh renderOrder={0} rotation={[Math.PI / 3, 0, 0]} castShadow={false} receiveShadow={false}>
-          <torusGeometry args={[0.88, 0.045, 16, 48]} />
-          <meshStandardMaterial
-            color={
-              item.powerUpType === 'rainbow' ? '#ff00ff' :
-              item.powerUpType === 'freeze' ? '#00f0ff' : '#ffaa00'
-            }
-            emissive={
-              item.powerUpType === 'rainbow' ? '#ff00ff' :
-              item.powerUpType === 'freeze' ? '#00f0ff' : '#ffaa00'
-            }
-            emissiveIntensity={1.2}
-            transparent
-            opacity={0.85}
-          />
-        </mesh>
-      )}
-
-      {/* 2. Fluid Liquid Water Drop (`onBeforeCompile` custom vertex shader creates organic surface water ripples with NO black shadows) */}
+      {/* 2. Fluid Liquid Water Drop (`onBeforeCompile` custom vertex shader creates organic surface water ripples with NO black shadows, NO external ring) */}
       <mesh ref={orbMeshRef} renderOrder={1} castShadow={false} receiveShadow={false}>
         <sphereGeometry args={[0.72, 64, 64]} />
         <meshPhysicalMaterial
@@ -278,8 +260,8 @@ const FloatingWaterOrbItem = React.memo(function FloatingWaterOrbItem({ balloon:
           <group position={[0, 0, 0]}>
             {(() => {
               const len = Math.max(1, displayText.length);
-              const wordFontSize = Math.min(0.52, 1.38 / Math.max(2.5, len));
-              const charWidth = wordFontSize * 0.82;
+              const wordFontSize = Math.min(0.82, 2.4 / Math.max(2.2, len));
+              const charWidth = wordFontSize * 0.78;
               return displayText.split('').map((char, idx) => {
                 const isTyped = idx < item.typedIndex;
                 const isNext = idx === item.typedIndex;

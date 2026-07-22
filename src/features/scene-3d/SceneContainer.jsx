@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { FloatingShips3D } from '../typing-game/FloatingShips3D.jsx';
 import { BalloonBursts3D } from '../typing-game/BalloonBursts3D.jsx';
 import { FluffyClouds3D } from './FluffyClouds3D.jsx';
+import { FloatingBackgroundWaterBubbles3D } from './FloatingBackgroundWaterBubbles3D.jsx';
 import { EarthIsland3D } from './EarthIsland3D.jsx';
 import { useThemeStore } from '../theme/useThemeStore.js';
 
@@ -64,6 +65,9 @@ export const SceneContainer = memo(function SceneContainer() {
 
         {/* 15 Serene, interactive fluffy clouds styled by theme */}
         <FluffyClouds3D />
+
+        {/* Ambient real water bubbles floating in the deep background */}
+        <FloatingBackgroundWaterBubbles3D />
 
         {/* 3D Floating Low-Poly Earth Islands (Crystal Aqua, Pine Valley, Sakura Sanctuary, etc.) */}
         <EarthIsland3D />

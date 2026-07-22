@@ -200,8 +200,12 @@ export const useTypingGameStore = create((set, get) => ({
       powerUpType = r < 0.36 ? 'rainbow' : r < 0.68 ? 'freeze' : 'starburst';
     }
 
-    // Speed formula: if rush mode active (`Meteor Storm`), bubbles rise faster
+    // Speed formula: if words mode, make them rise much slower so children have time to read/type. If rush mode (`Meteor Storm`), rise faster.
     let speed = (0.8 + Math.random() * 0.55) * (state.gameStyle === 'rush' ? 1.55 : 1.0);
+    if (state.mode === 'words') {
+      speed = (0.40 + Math.random() * 0.25) * (state.gameStyle === 'rush' ? 1.45 : 1.0);
+    }
+
     const swaySpeed = 1.6 + Math.random() * 0.8;
     const swayAmount = 0.18 + Math.random() * 0.14;
     const swayPhase = Math.random() * Math.PI * 2;
@@ -209,14 +213,14 @@ export const useTypingGameStore = create((set, get) => ({
     const newBalloon = {
       id: nextBalloonId++,
       text,
-      shapeType: 'sphere', // Fully round water bubbles (`1:1:1 strict round`)
+      shapeType: state.mode === 'words' ? 'word_capsule' : 'sphere',
       typedIndex: 0,
       position: [bestX, -3.5, bestZ],
       speed,
       swaySpeed,
       swayAmount,
       swayPhase,
-      scale: 0.45,
+      scale: state.mode === 'words' ? 0.65 : 0.45,
       color,
       powerUpType
     };
