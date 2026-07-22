@@ -3,141 +3,195 @@ import { useFrame } from '@react-three/fiber';
 import { useTypingGameStore } from '../typing-game/useTypingGameStore.js';
 import * as THREE from 'three';
 
-// ─── How many simultaneous shooting stars ──────────────────────────────────
-const STAR_COUNT = 9;
+const STAR_COUNT = 8;
 
-// ─── One shooting star instance ────────────────────────────────────────────
-const ShootingStar = React.memo(function ShootingStar({ starRef }) {
-  const meshRef = useRef();
-  const trailRef = useRef();
+// ─── Trail segment count per star ─────────────────────────────────────────
+const TRAIL_LEN = 10;
+
+// ─── Colors: bright white head → golden → cyan tail ──────────────────────
+const TRAIL_COLORS = [
+  '#ffffff', '#fffde7', '#fff9c4', '#e0f7fa',
+  '#b2ebf2', '#80deea', '#4dd0e1', '#26c6da',
+  '#00bcd4', '#006064'
+];
+
+// ─── Single meteor coming straight at the camera ──────────────────────────
+const Meteor = React.memo(function Meteor({ slot }) {
+  const headRef = useRef();
+  const glowRef = useRef();
+  const trailRefs = useRef(Array.from({ length: TRAIL_LEN }, () => ({ current: null })));
 
   useFrame((state, delta) => {
-    const s = starRef.current;
+    const s = slot.current;
     if (!s.active) {
-      if (meshRef.current) meshRef.current.visible = false;
-      if (trailRef.current) trailRef.current.visible = false;
+      if (headRef.current) headRef.current.visible = false;
+      if (glowRef.current) glowRef.current.visible = false;
+      trailRefs.current.forEach(r => { if (r.current) r.current.visible = false; });
       return;
     }
 
-    const t = (Date.now() - s.startTime) / s.duration; // 0 → 1
+    const now = Date.now();
+    const elapsed = now - s.startTime;
+
+    // Staggered delay
+    if (elapsed < s.delay) {
+      if (headRef.current) headRef.current.visible = false;
+      if (glowRef.current) glowRef.current.visible = false;
+      trailRefs.current.forEach(r => { if (r.current) r.current.visible = false; });
+      return;
+    }
+
+    const t = Math.min((elapsed - s.delay) / s.duration, 1); // 0→1
     if (t >= 1) {
       s.active = false;
-      if (meshRef.current) meshRef.current.visible = false;
-      if (trailRef.current) trailRef.current.visible = false;
+      if (headRef.current) headRef.current.visible = false;
+      if (glowRef.current) glowRef.current.visible = false;
+      trailRefs.current.forEach(r => { if (r.current) r.current.visible = false; });
       return;
     }
 
-    // Move along direction
-    s.pos[0] += s.dir[0] * s.speed * delta;
-    s.pos[1] += s.dir[1] * s.speed * delta;
+    // Accelerate as it approaches (ease-in)
+    const tAccel = t * t * 0.6 + t * 0.4;
 
-    if (meshRef.current) {
-      meshRef.current.visible = true;
-      meshRef.current.position.set(s.pos[0], s.pos[1], s.pos[2]);
-      // Fade in then out
-      const fade = t < 0.15 ? t / 0.15 : t > 0.75 ? 1 - (t - 0.75) / 0.25 : 1;
-      meshRef.current.material.opacity = 0.92 * fade;
-      // Slight scale pulse
-      const scl = 1 + Math.sin(t * Math.PI) * 0.3;
-      meshRef.current.scale.set(scl * 3.5, scl * 0.55, scl * 0.55);
+    // Current Z: from startZ (far back) → endZ (close to camera)
+    const curZ = s.startZ + (s.endZ - s.startZ) * tAccel;
+    const curX = s.startX + s.driftX * tAccel;
+    const curY = s.startY + (s.endY - s.startY) * tAccel;
+
+    // Scale grows dramatically as it approaches (perspective zoom-in feel)
+    const proximity = (curZ - s.startZ) / (s.endZ - s.startZ); // 0→1
+    const headScale = 0.04 + proximity * proximity * 0.55;
+    const glowScale = headScale * 3.2;
+
+    // Fade: appear quickly, hold, then fade out near camera
+    const fade = t < 0.08 ? t / 0.08 : t > 0.82 ? 1 - (t - 0.82) / 0.18 : 1;
+
+    if (headRef.current) {
+      headRef.current.visible = true;
+      headRef.current.position.set(curX, curY, curZ);
+      headRef.current.scale.setScalar(headScale);
+      headRef.current.material.opacity = 0.98 * fade;
     }
 
-    if (trailRef.current) {
-      trailRef.current.visible = true;
-      // Trail slightly behind the head
-      trailRef.current.position.set(
-        s.pos[0] - s.dir[0] * 1.4,
-        s.pos[1] - s.dir[1] * 1.4,
-        s.pos[2]
-      );
-      const fade = t < 0.15 ? t / 0.15 : t > 0.65 ? 1 - (t - 0.65) / 0.35 : 1;
-      trailRef.current.material.opacity = 0.38 * fade;
-      trailRef.current.scale.set(6.5, 0.28, 0.28);
+    if (glowRef.current) {
+      glowRef.current.visible = true;
+      glowRef.current.position.set(curX, curY, curZ);
+      glowRef.current.scale.setScalar(glowScale);
+      glowRef.current.material.opacity = 0.22 * fade;
     }
+
+    // Draw trail: each segment stretches backward in Z from the head
+    trailRefs.current.forEach((ref, i) => {
+      if (!ref.current) return;
+      const segFrac = (i + 1) / TRAIL_LEN; // 0.1 → 1.0 (1 = furthest back)
+      const trailT = Math.max(0, tAccel - segFrac * 0.22); // trail lags behind head
+      const trailZ = s.startZ + (s.endZ - s.startZ) * trailT;
+      const trailX = s.startX + s.driftX * trailT;
+      const trailY = s.startY + (s.endY - s.startY) * trailT;
+
+      const trailScale = Math.max(0.005, headScale * (1 - segFrac * 0.82));
+      const trailOpacity = (1 - segFrac) * 0.88 * fade;
+
+      ref.current.visible = tAccel > segFrac * 0.15;
+      ref.current.position.set(trailX, trailY, trailZ);
+      ref.current.scale.setScalar(trailScale);
+      ref.current.material.opacity = trailOpacity;
+    });
   });
 
   return (
     <group>
-      {/* Bright head */}
-      <mesh ref={meshRef} visible={false} castShadow={false} receiveShadow={false}>
-        <sphereGeometry args={[0.14, 10, 10]} />
+      {/* Bright white head */}
+      <mesh ref={headRef} visible={false} castShadow={false} receiveShadow={false}>
+        <sphereGeometry args={[1, 16, 16]} />
         <meshBasicMaterial color="#ffffff" transparent opacity={0} depthWrite={false} />
       </mesh>
-      {/* Glowing comet tail */}
-      <mesh ref={trailRef} visible={false} castShadow={false} receiveShadow={false}>
-        <sphereGeometry args={[0.14, 8, 8]} />
-        <meshBasicMaterial color="#a5f3fc" transparent opacity={0} depthWrite={false} />
+
+      {/* Soft outer aura glow */}
+      <mesh ref={glowRef} visible={false} castShadow={false} receiveShadow={false}>
+        <sphereGeometry args={[1, 12, 12]} />
+        <meshBasicMaterial color="#fffde7" transparent opacity={0} depthWrite={false} />
       </mesh>
-    </group>
-  );
-});
 
-// ─── Controller that watches streaks and fires stars ───────────────────────
-export const ShootingStars3D = React.memo(function ShootingStars3D() {
-  const streak = useTypingGameStore((s) => s.streak);
-
-  // Mutable star state stored in refs (not React state — no re-render needed)
-  const stars = useMemo(() => {
-    return Array.from({ length: STAR_COUNT }, (_, i) => ({
-      id: i,
-      ref: { current: { active: false, pos: [0, 0, 0], dir: [0, 0], speed: 0, startTime: 0, duration: 0 } }
-    }));
-  }, []);
-
-  // Track last milestone to avoid re-firing on same streak
-  const lastMilestoneRef = useRef(0);
-
-  useEffect(() => {
-    // Trigger on every new multiple of 5 (5, 10, 15, …)
-    const milestone = Math.floor(streak / 5) * 5;
-    if (streak >= 5 && milestone > lastMilestoneRef.current) {
-      lastMilestoneRef.current = milestone;
-      fireCelebration(stars, streak);
-    }
-    if (streak === 0) lastMilestoneRef.current = 0;
-  }, [streak, stars]);
-
-  return (
-    <group>
-      {stars.map((s) => (
-        <ShootingStar key={s.id} starRef={s.ref} />
+      {/* Trail segments — colour fades from warm white → deep cyan */}
+      {Array.from({ length: TRAIL_LEN }, (_, i) => (
+        <mesh
+          key={i}
+          ref={(el) => { trailRefs.current[i] = { current: el }; }}
+          visible={false}
+          castShadow={false}
+          receiveShadow={false}
+        >
+          <sphereGeometry args={[1, 10, 10]} />
+          <meshBasicMaterial
+            color={TRAIL_COLORS[i] || '#006064'}
+            transparent
+            opacity={0}
+            depthWrite={false}
+          />
+        </mesh>
       ))}
     </group>
   );
 });
 
-// ─── Spawn a burst of shooting stars on combo milestone ───────────────────
-function fireCelebration(stars, streak) {
-  // More stars for higher streaks
-  const count = Math.min(STAR_COUNT, 4 + Math.floor(streak / 5));
-
-  // Pick `count` idle stars to activate
-  const idle = stars.filter((s) => !s.ref.current.active);
-  const chosen = idle.slice(0, count);
-
-  chosen.forEach((s, i) => {
-    const state = s.ref.current;
-
-    // Spawn anywhere along the top/sides of the scene
-    const spawnEdge = Math.random();
-    let startX, startY;
-    if (spawnEdge < 0.5) {
-      // From top-left area streaking right-and-down
-      startX = -14 + Math.random() * 8;
-      startY = 7 + Math.random() * 3;
-    } else {
-      // From top-right area streaking left-and-down
-      startX = 6 + Math.random() * 8;
-      startY = 7 + Math.random() * 3;
-    }
-
-    const angle = (spawnEdge < 0.5 ? -0.38 : -2.75) + (Math.random() - 0.5) * 0.35;
-
-    state.active = true;
-    state.pos = [startX, startY, -3.5 - Math.random() * 2];
-    state.dir = [Math.cos(angle), Math.sin(angle)];
-    state.speed = 12 + Math.random() * 8;
-    state.duration = 1000 + Math.random() * 600; // ms
-    state.startTime = Date.now() + i * 90; // stagger each star by 90 ms
-  });
+// ─── Seeded random ─────────────────────────────────────────────────────────
+let _seed = 77;
+function sr() {
+  _seed = (_seed * 16807) % 2147483647;
+  return (_seed - 1) / 2147483646;
 }
+
+function fireMeteor(slot, index, streakCount) {
+  const s = slot.current;
+  // Spawn high in the sky, spread across X, deep in Z
+  s.startX = (sr() - 0.5) * 18;
+  s.startY = 7 + sr() * 5;
+  s.startZ = -18 - sr() * 8;    // deep background
+  s.driftX = (sr() - 0.5) * 1.4; // very slight horizontal drift
+  s.endY = s.startY - 1.5 - sr() * 2; // slight downward arc
+  s.endZ = -0.8;                 // zooms right to near the camera
+  s.duration = 1600 + sr() * 700; // ms
+  s.delay = index * 110;         // stagger
+  s.startTime = Date.now();
+  s.active = true;
+}
+
+// ─── Main component ────────────────────────────────────────────────────────
+export const ShootingStars3D = React.memo(function ShootingStars3D() {
+  const streak = useTypingGameStore((s) => s.streak);
+  const lastMilestoneRef = useRef(0);
+
+  const slots = useMemo(() =>
+    Array.from({ length: STAR_COUNT }, () => ({
+      current: {
+        active: false, startX: 0, startY: 0, startZ: 0,
+        driftX: 0, endY: 0, endZ: 0,
+        duration: 0, delay: 0, startTime: 0
+      }
+    })), []);
+
+  useEffect(() => {
+    const milestone = Math.floor(streak / 5) * 5;
+    if (streak >= 5 && milestone > lastMilestoneRef.current) {
+      lastMilestoneRef.current = milestone;
+      const count = Math.min(STAR_COUNT, 3 + Math.floor(streak / 5));
+      let fired = 0;
+      for (let i = 0; i < slots.length && fired < count; i++) {
+        if (!slots[i].current.active) {
+          fireMeteor(slots[i], fired, streak);
+          fired++;
+        }
+      }
+    }
+    if (streak === 0) lastMilestoneRef.current = 0;
+  }, [streak, slots]);
+
+  return (
+    <group>
+      {slots.map((slot, i) => (
+        <Meteor key={i} slot={slot} />
+      ))}
+    </group>
+  );
+});
