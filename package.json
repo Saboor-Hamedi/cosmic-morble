@@ -2,7 +2,7 @@
   "name": "cosmic-morble",
   "private": true,
   "type": "module",
-  "version": "3.1.0",
+  "version": "1.0.2",
   "description": "3D Space Exploration Game with Electron, React, and Three.js featuring sleek holographic overlays and an interactive Quantum Cosmic Orb.",
   "author": {
     "name": "Saboor Hamedi",

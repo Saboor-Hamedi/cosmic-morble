@@ -21,6 +21,7 @@ import theme19Img from '../../themes/theme19.png';
 import theme20Img from '../../themes/theme20.png';
 import theme21Img from '../../themes/theme21.png';
 import theme22Img from '../../themes/theme22.png';
+import theme23Img from '../../themes/theme23.png';
 
 const SETTINGS_KEY = 'cosmic_morble_settings_json';
 
@@ -660,6 +661,35 @@ export const THEMES = {
     keyText: '#00251a',
     bubbleColor: '#69f0ae',
     bubbleEmissive: '#00c853'
+  },
+
+  theme23: {
+    id: 'theme23',
+    name: 'Islamic Golden Hour',
+    icon: '🕌',
+    previewImg: theme23Img,
+    skyGradient: 'linear-gradient(180deg, #1a0a00 0%, #7c3a00 45%, #f5a623 100%)',
+    ambientColor: '#fff8e1',
+    ambientIntensity: 1.0,
+    directionalColor: '#ffcc80',
+    cloudColor: '#fff8e1',
+    cloudEmissive: '#ffcc80',
+    plateauColor: '#bf6c00',
+    plateauAccent: '#f5a623',
+    rockBaseColor: '#3e1f00',
+    rockAccentColor: '#7c3a00',
+    waterColor: '#ffe0b2',
+    treeType: 'crystal',
+    treeColor: '#f5a623',
+    treeAccent: '#fff8e1',
+    keyboardTray: '#3e1f00',
+    keyboardTrim: '#7c3a00',
+    keyRowColors: ['#fff8e1', '#ffe0b2', '#ffcc80'],
+    keySpacebar: '#f5a623',
+    keyActive: '#ffd600',
+    keyText: '#3e1f00',
+    bubbleColor: '#ffcc80',
+    bubbleEmissive: '#f5a623'
   }
 };
 
