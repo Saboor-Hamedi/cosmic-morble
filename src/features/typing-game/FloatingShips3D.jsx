@@ -126,15 +126,15 @@ const FloatingWaterOrbItem = React.memo(function FloatingWaterOrbItem({ balloon:
       onPointerOver={(e) => { e.stopPropagation(); setHovered(true); }}
       onPointerOut={(e) => { e.stopPropagation(); setHovered(false); }}
     >
-      {/* 1. Soft Enchanted Outer Water Aura Halo (`castShadow={false} receiveShadow={false}` = zero black shadow) */}
+      {/* 1. Very faint outer glow halo — barely visible, just a whisper of color */}
       <mesh renderOrder={0} castShadow={false} receiveShadow={false}>
-        <sphereGeometry args={[0.74, 32, 32]} />
+        <sphereGeometry args={[0.76, 32, 32]} />
         <meshStandardMaterial
-          color={item.powerUpType === 'rainbow' ? '#ff00ff' : item.powerUpType === 'freeze' ? '#00f0ff' : item.powerUpType === 'starburst' ? '#ffaa00' : orbColor}
-          emissive={item.powerUpType === 'rainbow' ? '#ff00ff' : item.powerUpType === 'freeze' ? '#00f0ff' : item.powerUpType === 'starburst' ? '#ffaa00' : orbColor}
-          emissiveIntensity={item.powerUpType ? 1.0 : (hovered ? 0.9 : 0.4)}
+          color={item.powerUpType === 'rainbow' ? '#cc44cc' : item.powerUpType === 'freeze' ? '#00ccee' : item.powerUpType === 'starburst' ? '#ddaa00' : orbColor}
+          emissive={orbColor}
+          emissiveIntensity={item.powerUpType ? 0.35 : (hovered ? 0.22 : 0.08)}
           transparent
-          opacity={item.powerUpType ? 0.45 : (hovered ? 0.35 : 0.15)}
+          opacity={item.powerUpType ? 0.18 : (hovered ? 0.12 : 0.06)}
           depthWrite={false}
         />
       </mesh>
@@ -144,15 +144,15 @@ const FloatingWaterOrbItem = React.memo(function FloatingWaterOrbItem({ balloon:
         <sphereGeometry args={[0.72, 64, 64]} />
         <meshPhysicalMaterial
           color={orbColor}
-          roughness={0.03}
-          metalness={0.05}
-          transmission={0.72}
+          roughness={0.04}
+          metalness={0.0}
+          transmission={0.88}
           ior={1.333}
-          thickness={1.6}
+          thickness={1.2}
           clearcoat={1.0}
           clearcoatRoughness={0.02}
           transparent
-          opacity={0.84}
+          opacity={0.62}
           depthWrite={false}
           onBeforeCompile={(shader) => {
             shader.uniforms.uTime = { value: 0 };

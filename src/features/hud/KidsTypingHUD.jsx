@@ -3,6 +3,27 @@ import { useTypingGameStore } from '../typing-game/useTypingGameStore.js';
 import { useThemeStore } from '../theme/useThemeStore.js';
 import { AchievementsModal } from './AchievementsModal.jsx';
 
+// Shared subtle pill button style — very low-key, near-invisible
+const pillBtn = (active = false, activeColor = '#38bdf8') => ({
+  background: active ? `rgba(${hexToRgb(activeColor)}, 0.18)` : 'transparent',
+  border: active ? `1px solid rgba(${hexToRgb(activeColor)}, 0.35)` : '1px solid transparent',
+  borderRadius: '999px',
+  padding: '5px 13px',
+  color: active ? '#e2e8f0' : 'rgba(255,255,255,0.45)',
+  fontSize: '12px',
+  fontWeight: active ? 600 : 500,
+  cursor: 'pointer',
+  transition: 'all 0.2s',
+  letterSpacing: '0.01em',
+});
+
+function hexToRgb(hex) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `${r}, ${g}, ${b}`;
+}
+
 export const KidsTypingHUD = memo(function KidsTypingHUD() {
   const {
     score, streak, highScore, mode, setMode, capsLock, toggleCapsLock,
@@ -23,7 +44,7 @@ export const KidsTypingHUD = memo(function KidsTypingHUD() {
         top: '46px',
         left: 0,
         right: 0,
-        padding: '0 32px',
+        padding: '0 24px',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
@@ -31,277 +52,239 @@ export const KidsTypingHUD = memo(function KidsTypingHUD() {
         zIndex: 50,
         fontFamily: `'Inter', system-ui, -apple-system, sans-serif`
       }}>
-        {/* Left: Glass Capsule Score Indicator */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', pointerEvents: 'auto' }}>
+
+        {/* ── Left: Ultra-minimal score whisper ────────────────── */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', pointerEvents: 'auto' }}>
+
+          {/* Score capsule — very dim, almost ghostly */}
           <div style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '12px',
-            background: 'rgba(15, 23, 42, 0.65)',
-            backdropFilter: 'blur(16px)',
-            border: '1px solid rgba(255, 255, 255, 0.16)',
+            gap: '10px',
+            background: 'rgba(0, 0, 0, 0.28)',
+            backdropFilter: 'blur(14px)',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
             borderRadius: '999px',
-            padding: '7px 18px',
-            fontSize: '14px',
-            fontWeight: 700,
-            color: '#ffffff',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.35)'
+            padding: '5px 14px',
+            fontSize: '13px',
+            fontWeight: 600,
+            color: 'rgba(255,255,255,0.7)',
           }}>
-            <span style={{ color: '#38bdf8', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span>⭐</span>
+            <span style={{ color: 'rgba(56, 189, 248, 0.85)', display: 'flex', alignItems: 'center', gap: '5px' }}>
+              <span style={{ fontSize: '11px' }}>⭐</span>
               <span>{score.toLocaleString()}</span>
             </span>
 
             {streak > 1 && (
-              <span style={{ color: '#fb923c', display: 'flex', alignItems: 'center', gap: '4px', animation: 'pulse 1.5s infinite' }}>
-                <span>🔥</span>
+              <span style={{ color: 'rgba(251, 146, 60, 0.85)', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                <span style={{ fontSize: '11px' }}>🔥</span>
                 <span>{streak}x</span>
               </span>
             )}
 
             {highScore > 0 && (
-              <span style={{ color: '#facc15', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '5px', opacity: 0.9 }}>
-                <span>🏆</span>
+              <span style={{ color: 'rgba(250, 204, 21, 0.7)', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span style={{ fontSize: '11px' }}>🏆</span>
                 <span>{highScore.toLocaleString()}</span>
               </span>
             )}
           </div>
 
-          {/* Active Rush / Superpower Capsule Badges */}
+          {/* Rush & Powerup status — only shown when active, low saturation */}
           {gameStyle === 'rush' && (
             <div style={{
-              background: 'rgba(239, 68, 68, 0.25)',
+              background: 'rgba(239, 68, 68, 0.14)',
               backdropFilter: 'blur(10px)',
-              border: '1px solid #ef4444',
+              border: '1px solid rgba(239, 68, 68, 0.3)',
               borderRadius: '999px',
-              padding: '6px 14px',
-              fontSize: '13px',
-              fontWeight: 800,
-              color: '#fca5a5',
-              boxShadow: '0 4px 16px rgba(239, 68, 68, 0.3)'
+              padding: '4px 12px',
+              fontSize: '12px',
+              fontWeight: 600,
+              color: 'rgba(252, 165, 165, 0.9)',
             }}>
-              ⚡ Rush: {Math.ceil(rushTimeLeft)}s
+              ⚡ {Math.ceil(rushTimeLeft)}s
             </div>
           )}
 
           {activePowerUp && (
             <div style={{
-              background: 'rgba(168, 85, 247, 0.25)',
+              background: 'rgba(168, 85, 247, 0.14)',
               backdropFilter: 'blur(10px)',
-              border: '1px solid #c084fc',
+              border: '1px solid rgba(168, 85, 247, 0.28)',
               borderRadius: '999px',
-              padding: '6px 14px',
-              fontSize: '13px',
-              fontWeight: 800,
-              color: '#e9d5ff',
-              animation: 'pulse 1s infinite',
-              boxShadow: '0 4px 16px rgba(168, 85, 247, 0.3)'
+              padding: '4px 12px',
+              fontSize: '12px',
+              fontWeight: 600,
+              color: 'rgba(233, 213, 255, 0.85)',
+              animation: 'pulse 2s infinite',
             }}>
-              {activePowerUp === 'rainbow' && '🌈 2x Double Points!'}
-              {activePowerUp === 'freeze' && '❄️ Freeze Time Active!'}
-              {activePowerUp === 'starburst' && '💥 Starburst Active!'}
+              {activePowerUp === 'rainbow' && '🌈 2×'}
+              {activePowerUp === 'freeze' && '❄️ Freeze'}
+              {activePowerUp === 'starburst' && '💥 Burst'}
             </div>
           )}
         </div>
 
-        {/* Right: VisionOS / Figma Styled Floating Capsule Dock (`crystal clear, pill shape, zero square borders`) */}
+        {/* ── Right: Ghost-glass floating dock ─────────────────── */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '8px',
+          gap: '2px',
           pointerEvents: 'auto',
-          background: 'rgba(15, 23, 42, 0.65)',
+          background: 'rgba(0, 0, 0, 0.28)',
           backdropFilter: 'blur(16px)',
-          border: '1px solid rgba(255, 255, 255, 0.16)',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
           borderRadius: '999px',
-          padding: '5px 8px',
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.35)'
+          padding: '4px 6px',
         }}>
-          {/* Smooth Mode Switcher Capsule (`sleek gradient tab selector`) */}
+
+          {/* Mode segment — subtle glow on active */}
           <div style={{
             display: 'flex',
-            background: 'rgba(0, 0, 0, 0.35)',
+            background: 'rgba(0, 0, 0, 0.25)',
             borderRadius: '999px',
-            padding: '3px',
-            border: '1px solid rgba(255, 255, 255, 0.08)'
+            padding: '2px',
           }}>
             <button
               onClick={() => setMode('letters')}
-              title="Practice single letters (Ctrl + Alt shortcut)"
-              style={{
-                background: mode === 'letters' ? 'linear-gradient(135deg, #0ea5e9, #38bdf8)' : 'transparent',
-                border: 'none',
-                borderRadius: '999px',
-                padding: '5px 14px',
-                color: mode === 'letters' ? '#ffffff' : '#94a3b8',
-                fontSize: '13px',
-                fontWeight: mode === 'letters' ? 700 : 600,
-                cursor: 'pointer',
-                boxShadow: mode === 'letters' ? '0 2px 10px rgba(56, 189, 248, 0.4)' : 'none',
-                transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)'
-              }}
+              title="Letters Mode (Ctrl + Alt)"
+              style={pillBtn(mode === 'letters', '#38bdf8')}
+              onMouseOver={(e) => { e.currentTarget.style.color = '#e2e8f0'; }}
+              onMouseOut={(e) => { e.currentTarget.style.color = mode === 'letters' ? '#e2e8f0' : 'rgba(255,255,255,0.45)'; }}
             >
               Letters
             </button>
             <button
               onClick={() => setMode('words')}
-              title="Practice full words (Ctrl + Alt shortcut)"
-              style={{
-                background: mode === 'words' ? 'linear-gradient(135deg, #0ea5e9, #38bdf8)' : 'transparent',
-                border: 'none',
-                borderRadius: '999px',
-                padding: '5px 14px',
-                color: mode === 'words' ? '#ffffff' : '#94a3b8',
-                fontSize: '13px',
-                fontWeight: mode === 'words' ? 700 : 600,
-                cursor: 'pointer',
-                boxShadow: mode === 'words' ? '0 2px 10px rgba(56, 189, 248, 0.4)' : 'none',
-                transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)'
-              }}
+              title="Words Mode (Ctrl + Alt)"
+              style={pillBtn(mode === 'words', '#38bdf8')}
+              onMouseOver={(e) => { e.currentTarget.style.color = '#e2e8f0'; }}
+              onMouseOut={(e) => { e.currentTarget.style.color = mode === 'words' ? '#e2e8f0' : 'rgba(255,255,255,0.45)'; }}
             >
               Words
             </button>
           </div>
 
-          {/* Glass Pill Action Buttons */}
+          {/* Divider */}
+          <div style={{ width: '1px', height: '16px', background: 'rgba(255,255,255,0.08)', margin: '0 3px' }} />
+
+          {/* Sound */}
           <button
             onClick={cycleSoundTheme}
-            title={`Keyboard Audio: ${soundLabel}`}
+            title={`Sound: ${soundLabel}`}
             style={{
-              background: 'rgba(255, 255, 255, 0.06)',
-              border: '1px solid rgba(255, 255, 255, 0.12)',
-              borderRadius: '999px',
-              padding: '6px 12px',
-              fontSize: '13px',
-              fontWeight: 600,
-              color: '#e2e8f0',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              transition: 'all 0.2s'
+              ...pillBtn(false),
+              display: 'flex', alignItems: 'center', gap: '5px',
+              padding: '5px 11px',
             }}
-            onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)'; }}
-            onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)'; }}
+            onMouseOver={(e) => { e.currentTarget.style.color = '#e2e8f0'; e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; }}
+            onMouseOut={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.45)'; e.currentTarget.style.background = 'transparent'; }}
           >
             <span>{soundIcon}</span>
             <span>{soundLabel}</span>
           </button>
 
+          {/* Theme */}
           <button
             onClick={cycleTheme}
-            title={`Current Theme: ${theme.name}`}
+            title={`Theme: ${theme.name}`}
             style={{
-              background: 'rgba(255, 255, 255, 0.06)',
-              border: '1px solid rgba(255, 255, 255, 0.12)',
-              borderRadius: '999px',
-              padding: '6px 12px',
-              fontSize: '13px',
-              fontWeight: 600,
-              color: '#e2e8f0',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              transition: 'all 0.2s'
+              ...pillBtn(false),
+              display: 'flex', alignItems: 'center', gap: '5px',
+              padding: '5px 11px',
             }}
-            onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)'; }}
-            onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)'; }}
+            onMouseOver={(e) => { e.currentTarget.style.color = '#e2e8f0'; e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; }}
+            onMouseOut={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.45)'; e.currentTarget.style.background = 'transparent'; }}
           >
             <span>{theme.icon}</span>
             <span>Theme</span>
           </button>
 
+          {/* Divider */}
+          <div style={{ width: '1px', height: '16px', background: 'rgba(255,255,255,0.08)', margin: '0 3px' }} />
+
+          {/* Rush */}
           <button
             onClick={toggleRushMode}
-            title="Toggle 60s Meteor Storm Rush Mode"
+            title="60s Rush Mode"
             style={{
-              background: gameStyle === 'rush' ? 'linear-gradient(135deg, #ef4444, #f87171)' : 'rgba(255, 255, 255, 0.06)',
-              border: gameStyle === 'rush' ? 'none' : '1px solid rgba(255, 255, 255, 0.12)',
-              borderRadius: '999px',
-              padding: '6px 12px',
-              fontSize: '13px',
-              fontWeight: 700,
-              color: gameStyle === 'rush' ? '#ffffff' : '#e2e8f0',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '5px',
-              boxShadow: gameStyle === 'rush' ? '0 2px 10px rgba(239, 68, 68, 0.4)' : 'none',
-              transition: 'all 0.2s'
+              ...pillBtn(gameStyle === 'rush', '#ef4444'),
+              display: 'flex', alignItems: 'center', gap: '4px',
+              padding: '5px 11px',
             }}
-            onMouseOver={(e) => { if (gameStyle !== 'rush') e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)'; }}
-            onMouseOut={(e) => { if (gameStyle !== 'rush') e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)'; }}
+            onMouseOver={(e) => { e.currentTarget.style.color = '#e2e8f0'; e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; }}
+            onMouseOut={(e) => { e.currentTarget.style.background = gameStyle === 'rush' ? 'rgba(239,68,68,0.18)' : 'transparent'; }}
           >
             <span>⚡</span>
             <span>Rush</span>
           </button>
 
+          {/* Badges */}
           <button
             onClick={toggleBadgesModal}
-            title="Open Trophy & Achievement Showcase (Press Escape to close)"
+            title="Badges"
             style={{
-              background: 'rgba(255, 255, 255, 0.06)',
-              border: '1px solid rgba(255, 255, 255, 0.12)',
-              borderRadius: '999px',
-              padding: '6px 12px',
-              fontSize: '13px',
-              fontWeight: 600,
-              color: '#fef08a',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              transition: 'all 0.2s'
+              ...pillBtn(false),
+              display: 'flex', alignItems: 'center', gap: '4px',
+              padding: '5px 11px',
+              color: 'rgba(254, 240, 138, 0.55)',
             }}
-            onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)'; }}
-            onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)'; }}
+            onMouseOver={(e) => { e.currentTarget.style.color = '#fef08a'; e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; }}
+            onMouseOut={(e) => { e.currentTarget.style.color = 'rgba(254,240,138,0.55)'; e.currentTarget.style.background = 'transparent'; }}
           >
             <span>🏅</span>
             <span>Badges</span>
           </button>
 
+          {/* Divider */}
+          <div style={{ width: '1px', height: '16px', background: 'rgba(255,255,255,0.08)', margin: '0 3px' }} />
+
+          {/* Caps — tiny indicator, not a big bold button */}
           <button
             onClick={toggleCapsLock}
-            title="Caps Lock status"
+            title="Caps Lock"
             style={{
-              background: capsLock ? 'linear-gradient(135deg, #eab308, #facc15)' : 'rgba(255, 255, 255, 0.06)',
-              border: capsLock ? 'none' : '1px solid rgba(255, 255, 255, 0.12)',
+              background: capsLock ? 'rgba(234, 179, 8, 0.20)' : 'transparent',
+              border: capsLock ? '1px solid rgba(234, 179, 8, 0.35)' : '1px solid transparent',
               borderRadius: '999px',
-              padding: '6px 12px',
-              fontSize: '12px',
-              fontWeight: 800,
-              color: capsLock ? '#1e293b' : '#64748b',
+              padding: '5px 10px',
+              fontSize: '11px',
+              fontWeight: 700,
+              letterSpacing: '0.04em',
+              color: capsLock ? 'rgba(253, 224, 71, 0.90)' : 'rgba(255,255,255,0.28)',
               cursor: 'pointer',
-              boxShadow: capsLock ? '0 2px 10px rgba(250, 204, 21, 0.4)' : 'none',
-              transition: 'all 0.2s'
+              transition: 'all 0.2s',
             }}
           >
             {capsLock ? 'CAPS' : 'caps'}
           </button>
 
+          {/* Pause / Play */}
           <button
             onClick={togglePaused}
-            title="Pause / Play (Ctrl + Enter shortcut)"
+            title="Pause / Play (Ctrl + Enter)"
             style={{
-              background: isPaused ? 'linear-gradient(135deg, #22c55e, #4ade80)' : 'rgba(255, 255, 255, 0.06)',
-              border: isPaused ? 'none' : '1px solid rgba(255, 255, 255, 0.12)',
+              background: isPaused ? 'rgba(34, 197, 94, 0.18)' : 'transparent',
+              border: isPaused ? '1px solid rgba(34, 197, 94, 0.32)' : '1px solid transparent',
               borderRadius: '999px',
-              padding: '6px 12px',
-              fontSize: '13px',
-              fontWeight: 700,
-              color: isPaused ? '#ffffff' : '#cbd5e1',
-              cursor: 'pointer',
+              width: '30px',
+              height: '30px',
               display: 'flex',
               alignItems: 'center',
-              gap: '5px',
-              boxShadow: isPaused ? '0 2px 10px rgba(34, 197, 94, 0.4)' : 'none',
-              transition: 'all 0.2s'
+              justifyContent: 'center',
+              fontSize: '12px',
+              color: isPaused ? 'rgba(134, 239, 172, 0.9)' : 'rgba(255,255,255,0.4)',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              marginLeft: '2px',
             }}
-            onMouseOver={(e) => { if (!isPaused) e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)'; }}
-            onMouseOut={(e) => { if (!isPaused) e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)'; }}
+            onMouseOver={(e) => { e.currentTarget.style.color = '#e2e8f0'; e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.color = isPaused ? 'rgba(134,239,172,0.9)' : 'rgba(255,255,255,0.4)';
+              e.currentTarget.style.background = isPaused ? 'rgba(34,197,94,0.18)' : 'transparent';
+            }}
           >
-            <span>{isPaused ? '▶' : '⏸'}</span>
+            {isPaused ? '▶' : '⏸'}
           </button>
         </div>
       </div>
