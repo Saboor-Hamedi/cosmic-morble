@@ -1,6 +1,6 @@
 import React, { useRef, useState, useCallback, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Text, MeshDistortionMaterial } from '@react-three/drei';
+import { Text } from '@react-three/drei';
 import { useTypingGameStore } from './useTypingGameStore.js';
 import { useThemeStore } from '../theme/useThemeStore.js';
 import * as THREE from 'three';
@@ -18,6 +18,7 @@ const FUN_CANDY_COLORS = [
 const FloatingWaterOrbItem = React.memo(function FloatingWaterOrbItem({ balloon: item }) {
   const outerGroupRef = useRef();
   const orbMeshRef = useRef();
+  const orbShaderRef = useRef();
   const waveRef1 = useRef();
   const waveRef2 = useRef();
   const letterRef = useRef();
@@ -69,9 +70,12 @@ const FloatingWaterOrbItem = React.memo(function FloatingWaterOrbItem({ balloon:
     const strictRoundScale = baseScale * hoverScaleBonus;
     outerGroupRef.current.scale.set(strictRoundScale, strictRoundScale, strictRoundScale);
 
-    // Outer water sphere shimmer
+    // Outer water sphere shimmer & custom fluid water ripple shader updates
     if (orbMeshRef.current) {
       orbMeshRef.current.rotation.y = t * 0.2 + item.id;
+    }
+    if (orbShaderRef.current) {
+      orbShaderRef.current.uniforms.uTime.value = t + item.id * 1.5;
     }
 
     // Internal liquid water waves swaying (`looks like actual water caustics`)
@@ -179,13 +183,11 @@ const FloatingWaterOrbItem = React.memo(function FloatingWaterOrbItem({ balloon:
         />
       </mesh>
 
-      {/* 2. Fluid Liquid Water Drop (`MeshDistortionMaterial` gives real organic water ripples across the surface while staying 100% round!) */}
+      {/* 2. Fluid Liquid Water Drop (`onBeforeCompile` custom vertex shader creates organic surface water ripples while staying strictly round!) */}
       <mesh ref={orbMeshRef} renderOrder={1}>
         <sphereGeometry args={[0.72, 64, 64]} />
-        <MeshDistortionMaterial
+        <meshPhysicalMaterial
           color={orbColor}
-          speed={2.2}
-          distortion={0.14}
           roughness={0.03}
           metalness={0.05}
           transmission={0.72}
@@ -196,6 +198,24 @@ const FloatingWaterOrbItem = React.memo(function FloatingWaterOrbItem({ balloon:
           transparent
           opacity={0.84}
           depthWrite={false}
+          onBeforeCompile={(shader) => {
+            shader.uniforms.uTime = { value: 0 };
+            shader.uniforms.uDistortion = { value: 0.11 };
+            orbShaderRef.current = shader;
+            shader.vertexShader = `
+              uniform float uTime;
+              uniform float uDistortion;
+              ${shader.vertexShader}
+            `.replace(
+              '#include <begin_vertex>',
+              `
+              #include <begin_vertex>
+              float ripple1 = sin(position.x * 3.8 + uTime * 2.3) * cos(position.y * 3.8 + uTime * 1.9) * uDistortion;
+              float ripple2 = cos(position.z * 4.2 - uTime * 2.6) * sin(position.x * 4.2 + uTime * 2.1) * (uDistortion * 0.65);
+              transformed += normal * (ripple1 + ripple2);
+              `
+            );
+          }}
         />
       </mesh>
 
