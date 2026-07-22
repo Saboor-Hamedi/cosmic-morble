@@ -3,10 +3,27 @@ import { playBalloonPopSound, playKeyClickSound, playWinFanfare } from '../audio
 
 const SINGLE_LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 const KIDS_WORDS = [
+  // Animals & Creatures
   'CAT', 'DOG', 'SUN', 'STAR', 'MOON', 'BALL', 'JUMP', 'PLAY', 
   'TREE', 'FISH', 'BIRD', 'LION', 'BEAR', 'CAKE', 'HAPPY', 'LOVE', 
   'COOL', 'HERO', 'BLUE', 'RED', 'PINK', 'GOLD', 'FAST', 'FUN',
-  'SHIP', 'ROBOT', 'APPLE', 'DUCK', 'FROG', 'MILK', 'PONY', 'ZOO'
+  'SHIP', 'ROBOT', 'APPLE', 'DUCK', 'FROG', 'MILK', 'PONY', 'ZOO',
+  'TIGER', 'PANDA', 'KOALA', 'SHARK', 'WHALE', 'DOLPHIN', 'EAGLE', 'FALCON',
+  'ZEBRA', 'GIRAFFE', 'MONKEY', 'RABBIT', 'TURTLE', 'PENGUIN', 'DRAGON', 'UNICORN',
+  'DINOSAUR', 'BUTTERFLY', 'PUPPY', 'KITTEN', 'OTTER', 'SWAN', 'OCTOPUS', 'SEAL',
+  // Space, Planets & Cosmic Adventure
+  'SPACE', 'COMET', 'GALAXY', 'ORBIT', 'ASTRO', 'ALIEN', 'NEBULA', 'ROCKET',
+  'PLANET', 'COSMIC', 'MERCURY', 'VENUS', 'EARTH', 'MARS', 'SATURN', 'JUPITER',
+  'URANUS', 'NEPTUNE', 'PLUTO', 'METEOR', 'SOLAR', 'LUNAR', 'COSMOS', 'VOYAGE',
+  // Nature, Elements & Seasons
+  'OCEAN', 'RIVER', 'MOUNTAIN', 'RAINBOW', 'THUNDER', 'STORM', 'SUMMER', 'WINTER',
+  'SPRING', 'AUTUMN', 'BREEZE', 'FLOWER', 'GARDEN', 'FOREST', 'ISLAND', 'SUNSET',
+  // Adventure, Magic & Treats
+  'MAGIC', 'CASTLE', 'TREASURE', 'PIRATE', 'KNIGHT', 'WIZARD', 'QUEEN', 'KING',
+  'CROWN', 'DIAMOND', 'RUBY', 'PEARL', 'CRYSTAL', 'SPARKLE', 'CANDY', 'COOKIE',
+  'PIZZA', 'ICECREAM', 'BANANA', 'ORANGE', 'BERRY', 'CHERRY', 'SUPER', 'CHAMP',
+  'WINNER', 'ROCKSTAR', 'GAMES', 'PARTY', 'SMILE', 'FRIEND', 'GLOW', 'DREAM',
+  'FLIGHT', 'SOAR', 'BRAVE', 'SHINE', 'CLEVER', 'GENIUS', 'PEACE', 'JOY'
 ];
 
 const BALLOON_COLORS = [
