@@ -1,0 +1,40 @@
+{
+  "name": "cosmic-morble",
+  "private": true,
+  "type": "module",
+  "version": "3.1.0",
+  "description": "3D Space Exploration Game with Electron, React, and Three.js featuring sleek holographic overlays and an interactive Quantum Cosmic Orb.",
+  "main": "dist-electron/main.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build && electron-builder",
+    "preview": "vite preview"
+  },
+  "build": {
+    "appId": "com.cosmicmorble.app",
+    "productName": "Cosmic Morble",
+    "publish": null,
+    "win": {
+      "target": "nsis"
+    }
+  },
+  "dependencies": {
+    "@react-three/drei": "^9.105.6",
+    "@react-three/fiber": "^8.16.2",
+    "@react-three/postprocessing": "^3.0.4",
+    "framer-motion": "^11.2.10",
+    "lucide-react": "^0.383.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "three": "^0.165.0"
+  },
+  "devDependencies": {
+    "@types/three": "^0.165.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3",
+    "vite": "^5.2.13",
+    "vite-plugin-electron": "^0.28.6",
+    "vite-plugin-electron-renderer": "^0.14.5"
+  }
+}

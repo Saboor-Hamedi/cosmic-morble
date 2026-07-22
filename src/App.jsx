@@ -1,0 +1,65 @@
+import React, { useEffect } from 'react';
+import { GameProvider } from './features/game-state/GameContext.jsx';
+import { GameLayout } from './features/layout/GameLayout.jsx';
+import { useTypingGameStore } from './features/typing-game/useTypingGameStore.js';
+
+function GlobalKeyboardListener() {
+  const pressKey = useTypingGameStore((s) => s.pressKey);
+
+  useEffect(() => {
+    // Force focus immediately and repeatedly on startup so typing works instantly without clicking (`make sure the moment i run the app we can type`)
+    const forceFocus = () => {
+      try {
+        window.focus();
+        if (document.activeElement && document.activeElement !== document.body) {
+          document.activeElement.blur();
+        }
+      } catch (_) {}
+    };
+
+    forceFocus();
+    const t1 = setTimeout(forceFocus, 80);
+    const t2 = setTimeout(forceFocus, 250);
+    const t3 = setTimeout(forceFocus, 600);
+    const t4 = setTimeout(forceFocus, 1200);
+
+    const handleKeyDown = (e) => {
+      // Ignore modifier combinations (except pure letters/space/backspace/capslock)
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+
+      // Intercept letters, space, or CapsLock right at the capture phase
+      if (e.key === 'CapsLock' || (e.key && e.key.length === 1)) {
+        pressKey(e.key);
+      }
+    };
+
+    const handlePointerDown = () => {
+      forceFocus();
+    };
+
+    window.addEventListener('keydown', handleKeyDown, true);
+    window.addEventListener('pointerdown', handlePointerDown, true);
+    window.addEventListener('focus', forceFocus, true);
+
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+      clearTimeout(t4);
+      window.removeEventListener('keydown', handleKeyDown, true);
+      window.removeEventListener('pointerdown', handlePointerDown, true);
+      window.removeEventListener('focus', forceFocus, true);
+    };
+  }, [pressKey]);
+
+  return null;
+}
+
+export default function App() {
+  return (
+    <GameProvider>
+      <GlobalKeyboardListener />
+      <GameLayout />
+    </GameProvider>
+  );
+}

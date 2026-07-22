@@ -1,0 +1,137 @@
+import React, { memo } from 'react';
+import { useTypingGameStore } from '../typing-game/useTypingGameStore.js';
+import { useThemeStore } from '../theme/useThemeStore.js';
+
+export const KidsTypingHUD = memo(function KidsTypingHUD() {
+  const { score, mode, setMode, capsLock, toggleCapsLock } = useTypingGameStore();
+  const { theme, cycleTheme } = useThemeStore();
+
+  return (
+    <div style={{
+      position: 'absolute',
+      top: '40px',
+      left: 0,
+      right: 0,
+      padding: '0 32px',
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      pointerEvents: 'none',
+      zIndex: 50,
+      fontFamily: `system-ui, -apple-system, sans-serif`
+    }}>
+      {/* Subtle, Clean Score Display with 5px round badge (`subtle 5px round all the same theme`) */}
+      <div style={{
+        background: 'rgba(15, 23, 42, 0.45)',
+        backdropFilter: 'blur(10px)',
+        border: '1px solid rgba(255, 255, 255, 0.15)',
+        borderRadius: '5px',
+        padding: '6px 14px',
+        fontSize: '15px',
+        fontWeight: 600,
+        color: '#cbd5e1',
+        letterSpacing: '0.5px',
+        pointerEvents: 'auto',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px'
+      }}>
+        <span>Score:</span>
+        <span style={{ color: '#ffffff', fontWeight: 700, fontSize: '16px' }}>{score.toLocaleString()}</span>
+      </div>
+
+      {/* Subtle Mode Controls, Caps Lock Blob, and Theme Switcher (`all subtle 5px round`) */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '12px',
+        pointerEvents: 'auto',
+        fontSize: '14px',
+        fontWeight: 600
+      }}>
+        <button
+          onClick={() => setMode('letters')}
+          style={{
+            background: mode === 'letters' ? 'rgba(56, 189, 248, 0.2)' : 'rgba(15, 23, 42, 0.35)',
+            backdropFilter: 'blur(8px)',
+            border: `1px solid ${mode === 'letters' ? '#38bdf8' : 'rgba(255, 255, 255, 0.1)'}`,
+            borderRadius: '5px',
+            padding: '6px 12px',
+            color: mode === 'letters' ? '#38bdf8' : '#94a3b8',
+            cursor: 'pointer',
+            outline: 'none',
+            fontWeight: mode === 'letters' ? 700 : 500,
+            transition: 'all 0.2s'
+          }}
+        >
+          Letters
+        </button>
+
+        <button
+          onClick={() => setMode('words')}
+          style={{
+            background: mode === 'words' ? 'rgba(56, 189, 248, 0.2)' : 'rgba(15, 23, 42, 0.35)',
+            backdropFilter: 'blur(8px)',
+            border: `1px solid ${mode === 'words' ? '#38bdf8' : 'rgba(255, 255, 255, 0.1)'}`,
+            borderRadius: '5px',
+            padding: '6px 12px',
+            color: mode === 'words' ? '#38bdf8' : '#94a3b8',
+            cursor: 'pointer',
+            outline: 'none',
+            fontWeight: mode === 'words' ? 700 : 500,
+            transition: 'all 0.2s'
+          }}
+        >
+          Words
+        </button>
+
+        {/* Caps Lock Blob Badge (`make sure the caps lock as blob, subtle 5px round`) */}
+        <button
+          onClick={toggleCapsLock}
+          title="Click or press Caps Lock on your keyboard to switch case"
+          style={{
+            background: capsLock ? 'rgba(250, 204, 21, 0.25)' : 'rgba(15, 23, 42, 0.35)',
+            backdropFilter: 'blur(8px)',
+            border: `1px solid ${capsLock ? '#facc15' : 'rgba(255, 255, 255, 0.1)'}`,
+            borderRadius: '5px',
+            padding: '6px 14px',
+            color: capsLock ? '#fde047' : '#94a3b8',
+            cursor: 'pointer',
+            outline: 'none',
+            fontWeight: 700,
+            fontSize: '13px',
+            boxShadow: capsLock ? '0 0 16px rgba(250, 204, 21, 0.35)' : 'none',
+            transition: 'all 0.2s'
+          }}
+        >
+          {capsLock ? '● CAPS ON' : '○ caps off'}
+        </button>
+
+        {/* Theme Switcher Button (cycles all 10 themes, saves to settings.json, 5px round) */}
+        <button
+          onClick={cycleTheme}
+          title="Click to change 3D Theme (saves automatically to setting.json)"
+          style={{
+            background: 'rgba(255, 255, 255, 0.14)',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255, 255, 255, 0.24)',
+            borderRadius: '5px',
+            padding: '6px 14px',
+            color: '#ffffff',
+            cursor: 'pointer',
+            outline: 'none',
+            fontWeight: 600,
+            fontSize: '13px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            transition: 'all 0.2s'
+          }}
+        >
+          <span style={{ fontSize: '15px' }}>{theme.icon}</span>
+          <span>{theme.name}</span>
+        </button>
+      </div>
+    </div>
+  );
+});
