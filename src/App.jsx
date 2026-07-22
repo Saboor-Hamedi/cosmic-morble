@@ -5,6 +5,7 @@ import { useTypingGameStore } from './features/typing-game/useTypingGameStore.js
 
 function GlobalKeyboardListener() {
   const pressKey = useTypingGameStore((s) => s.pressKey);
+  const togglePaused = useTypingGameStore((s) => s.togglePaused);
 
   useEffect(() => {
     // Force focus immediately and repeatedly on startup so typing works instantly without clicking (`make sure the moment i run the app we can type`)
@@ -24,6 +25,13 @@ function GlobalKeyboardListener() {
     const t4 = setTimeout(forceFocus, 1200);
 
     const handleKeyDown = (e) => {
+      // Check for Ctrl + Enter toggle pause (`cntl + enter toggle the game stop and start`)
+      if (e.ctrlKey && (e.key === 'Enter' || e.code === 'Enter' || e.code === 'NumpadEnter')) {
+        e.preventDefault();
+        togglePaused();
+        return;
+      }
+
       // Ignore modifier combinations (except pure letters/space/backspace/capslock)
       if (e.metaKey || e.ctrlKey || e.altKey) return;
 
@@ -50,7 +58,7 @@ function GlobalKeyboardListener() {
       window.removeEventListener('pointerdown', handlePointerDown, true);
       window.removeEventListener('focus', forceFocus, true);
     };
-  }, [pressKey]);
+  }, [pressKey, togglePaused]);
 
   return null;
 }

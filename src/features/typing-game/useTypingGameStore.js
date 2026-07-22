@@ -51,6 +51,7 @@ let nextBurstId = 1;
 export const useTypingGameStore = create((set, get) => ({
   mode: 'letters', // 'letters' or 'words'
   capsLock: true,  // true = uppercase letters, false = lowercase letters
+  isPaused: false, // true = game paused, false = running (`cntl + enter toggle the game stop and start`)
   score: 0,
   streak: 0,
   highScore: 0,
@@ -58,6 +59,14 @@ export const useTypingGameStore = create((set, get) => ({
   bursts: [],
   activeKey: null,
   activeKeyTime: 0,
+
+  togglePaused: () => {
+    set((state) => ({ isPaused: !state.isPaused }));
+  },
+
+  setPaused: (paused) => {
+    set({ isPaused: Boolean(paused) });
+  },
 
   toggleCapsLock: () => {
     const newCaps = !get().capsLock;
@@ -102,6 +111,7 @@ export const useTypingGameStore = create((set, get) => ({
 
   spawnBalloon: () => {
     const state = get();
+    if (state.isPaused) return;
     const maxBalloons = state.mode === 'letters' ? 8 : 5;
     if (state.balloons.length >= maxBalloons) return;
 
@@ -165,7 +175,7 @@ export const useTypingGameStore = create((set, get) => ({
 
   updateBalloons: (delta) => {
     const state = get();
-    if (state.balloons.length === 0) return;
+    if (state.isPaused || state.balloons.length === 0) return;
 
     // 1. First pass: Move upward with buoyant momentum
     const moved = [];
@@ -266,6 +276,7 @@ export const useTypingGameStore = create((set, get) => ({
   pressKey: (keyChar) => {
     if (!keyChar) return;
     const state = get();
+    if (state.isPaused) return;
 
     // If Caps Lock key pressed, toggle case for entire game immediately (`if we press caps lock the letter becomes upper case`)
     if (keyChar === 'CapsLock' || keyChar.toLowerCase() === 'capslock') {
@@ -308,6 +319,7 @@ export const useTypingGameStore = create((set, get) => ({
 
   clickBalloon: (id) => {
     const state = get();
+    if (state.isPaused) return;
     const target = state.balloons.find((b) => b.id === id);
     if (!target) return;
 
