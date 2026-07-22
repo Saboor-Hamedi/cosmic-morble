@@ -5,6 +5,7 @@ import { FloatingShips3D } from '../typing-game/FloatingShips3D.jsx';
 import { BalloonBursts3D } from '../typing-game/BalloonBursts3D.jsx';
 import { FluffyClouds3D } from './FluffyClouds3D.jsx';
 import { FloatingBackgroundWaterBubbles3D } from './FloatingBackgroundWaterBubbles3D.jsx';
+import { ShootingStars3D } from './ShootingStars3D.jsx';
 import { EarthIsland3D } from './EarthIsland3D.jsx';
 import { useThemeStore } from '../theme/useThemeStore.js';
 
@@ -68,6 +69,9 @@ export const SceneContainer = memo(function SceneContainer() {
 
         {/* Ambient real water bubbles floating in the deep background */}
         <FloatingBackgroundWaterBubbles3D />
+
+        {/* 🌠 Shooting stars — burst across the sky on every 5x combo milestone */}
+        <ShootingStars3D />
 
         {/* 3D Floating Low-Poly Earth Islands (Crystal Aqua, Pine Valley, Sakura Sanctuary, etc.) */}
         <EarthIsland3D />
