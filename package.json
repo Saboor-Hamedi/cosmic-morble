@@ -8,20 +8,46 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build && electron-builder",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "publish:win": "vite build && electron-builder --win --publish always"
   },
   "build": {
     "appId": "com.cosmicmorble.app",
     "productName": "Cosmic Morble",
-    "publish": null,
+    "publish": {
+      "provider": "github",
+      "owner": "Saboor-Hamedi",
+      "repo": "cosmic-morble",
+      "releaseType": "release"
+    },
     "win": {
-      "target": "nsis"
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Cosmic Morble"
+    },
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*"
+    ],
+    "directories": {
+      "output": "release"
     }
   },
   "dependencies": {
     "@react-three/drei": "^9.105.6",
     "@react-three/fiber": "^8.16.2",
     "@react-three/postprocessing": "^3.0.4",
+    "electron-updater": "^6.3.9",
     "framer-motion": "^11.2.10",
     "lucide-react": "^0.383.0",
     "react": "^18.3.1",

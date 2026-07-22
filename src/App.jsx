@@ -2,6 +2,8 @@ import React, { useEffect } from 'react';
 import { GameProvider } from './features/game-state/GameContext.jsx';
 import { GameLayout } from './features/layout/GameLayout.jsx';
 import { useTypingGameStore } from './features/typing-game/useTypingGameStore.js';
+import { useThemeStore } from './features/theme/useThemeStore.js';
+import { UpdaterBadge } from './features/updater/UpdaterBadge.jsx';
 
 function GlobalKeyboardListener() {
   const pressKey = useTypingGameStore((s) => s.pressKey);
@@ -37,6 +39,13 @@ function GlobalKeyboardListener() {
         e.preventDefault();
         const currentMode = useTypingGameStore.getState().mode;
         useTypingGameStore.getState().setMode(currentMode === 'letters' ? 'words' : 'letters');
+        return;
+      }
+
+      // Ctrl+T → cycle theme
+      if (e.ctrlKey && (e.key === 't' || e.key === 'T')) {
+        e.preventDefault();
+        useThemeStore.getState().cycleTheme();
         return;
       }
 
@@ -76,6 +85,7 @@ export default function App() {
     <GameProvider>
       <GlobalKeyboardListener />
       <GameLayout />
+      <UpdaterBadge />
     </GameProvider>
   );
 }
