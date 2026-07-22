@@ -3,6 +3,7 @@ import { useFrame } from '@react-three/fiber';
 import { Text } from '@react-three/drei';
 import { useTypingGameStore } from './useTypingGameStore.js';
 import { useThemeStore } from '../theme/useThemeStore.js';
+import { CosmicBuddy3D } from '../scene-3d/CosmicBuddy3D.jsx';
 import * as THREE from 'three';
 
 const FUN_CANDY_COLORS = [
@@ -136,6 +137,26 @@ const FloatingWaterOrbItem = React.memo(function FloatingWaterOrbItem({ balloon:
           depthWrite={false}
         />
       </mesh>
+
+      {/* Superpower Aura Ring (`if this bubble holds a superpower`) */}
+      {item.powerUpType && (
+        <mesh renderOrder={0} rotation={[Math.PI / 3, 0, 0]} castShadow={false} receiveShadow={false}>
+          <torusGeometry args={[0.88, 0.045, 16, 48]} />
+          <meshStandardMaterial
+            color={
+              item.powerUpType === 'rainbow' ? '#ff00ff' :
+              item.powerUpType === 'freeze' ? '#00f0ff' : '#ffaa00'
+            }
+            emissive={
+              item.powerUpType === 'rainbow' ? '#ff00ff' :
+              item.powerUpType === 'freeze' ? '#00f0ff' : '#ffaa00'
+            }
+            emissiveIntensity={1.2}
+            transparent
+            opacity={0.85}
+          />
+        </mesh>
+      )}
 
       {/* 2. Fluid Liquid Water Drop (`onBeforeCompile` custom vertex shader creates organic surface water ripples with NO black shadows) */}
       <mesh ref={orbMeshRef} renderOrder={1} castShadow={false} receiveShadow={false}>
@@ -305,6 +326,7 @@ export const FloatingShips3D = React.memo(function FloatingShips3D() {
 
   return (
     <group>
+      <CosmicBuddy3D />
       {items.map((item) => (
         <FloatingWaterOrbItem key={item.id} balloon={item} />
       ))}

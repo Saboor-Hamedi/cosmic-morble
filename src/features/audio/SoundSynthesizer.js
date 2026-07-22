@@ -1,4 +1,5 @@
 import { audioManager } from './AudioContextManager.js';
+import { useTypingGameStore } from '../typing-game/useTypingGameStore.js';
 
 // Pre-cached AudioBuffer instances for instant, zero-latency playback
 let popBuffer = null;
@@ -13,13 +14,11 @@ function ensureBuffers(ctx) {
     const sampleRate = ctx.sampleRate;
     
     // 1. Pre-generate crisp, instant Balloon Pop Buffer (0.14 seconds)
-    // Combines percussive low-end thump with crisp white-noise snap
     const popLen = Math.floor(sampleRate * 0.14);
     popBuffer = ctx.createBuffer(1, popLen, sampleRate);
     const popData = popBuffer.getChannelData(0);
     for (let i = 0; i < popLen; i++) {
       const t = i / sampleRate;
-      // Exponential decay envelope
       const env = Math.exp(-t * 32);
       const lowThump = Math.sin(2 * Math.PI * (160 - t * 800) * t);
       const whiteNoise = (Math.random() * 2 - 1) * Math.exp(-t * 45);
@@ -64,7 +63,7 @@ export function playBalloonPopSound() {
       gain.gain.value = 0.9;
       source.connect(gain);
       gain.connect(ctx.destination);
-      source.start(0); // Zero latency immediate playback!
+      source.start(0);
     }
 
     if (winBuffer) {
@@ -79,12 +78,72 @@ export function playBalloonPopSound() {
   } catch {}
 }
 
-export function playKeyClickSound() {
+// Pentatonic scale notes C4 to C6 for Musical Piano Mode
+const PIANO_NOTES = [
+  261.63, 293.66, 329.63, 392.00, 440.00, 
+  523.25, 587.33, 659.25, 783.99, 880.00, 
+  1046.50, 1174.66, 1318.51, 1567.98, 1760.00
+];
+
+export function playKeyClickSound(keyChar = '') {
   const ctx = audioManager.getContext();
   if (!ctx) return;
   ensureBuffers(ctx);
 
+  const soundTheme = useTypingGameStore.getState().soundTheme || 'synth';
+
   try {
+    const now = ctx.currentTime;
+
+    if (soundTheme === 'piano') {
+      const charCode = (keyChar || 'A').toUpperCase().charCodeAt(0) - 65;
+      const freqIdx = Math.abs(charCode || 0) % PIANO_NOTES.length;
+      const freq = PIANO_NOTES[freqIdx];
+
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, now);
+      gain.gain.setValueAtTime(0.35, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.35);
+      return;
+    }
+
+    if (soundTheme === 'laser') {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(1100, now);
+      osc.frequency.exponentialRampToValueAtTime(240, now + 0.09);
+      gain.gain.setValueAtTime(0.22, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.09);
+      return;
+    }
+
+    if (soundTheme === 'water') {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(190, now);
+      osc.frequency.exponentialRampToValueAtTime(480, now + 0.08);
+      gain.gain.setValueAtTime(0.4, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.08);
+      return;
+    }
+
+    // Default 'synth' mechanical key click
     if (clickBuffer) {
       const source = ctx.createBufferSource();
       const gain = ctx.createGain();
@@ -116,6 +175,27 @@ export function playWinFanfare() {
       gain.connect(ctx.destination);
       osc.start(now);
       osc.stop(now + 0.25);
+    });
+  } catch {}
+}
+
+export function playPowerUpSound() {
+  const ctx = audioManager.getContext();
+  if (!ctx) return;
+  try {
+    const notes = [440, 554.37, 659.25, 880];
+    notes.forEach((freq, idx) => {
+      const now = ctx.currentTime + idx * 0.05;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now);
+      gain.gain.setValueAtTime(0.3, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.2);
     });
   } catch {}
 }

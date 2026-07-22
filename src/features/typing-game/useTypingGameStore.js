@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { playBalloonPopSound, playKeyClickSound, playWinFanfare } from '../audio/SoundSynthesizer.js';
+import { playBalloonPopSound, playKeyClickSound, playWinFanfare, playPowerUpSound } from '../audio/SoundSynthesizer.js';
 
 const SINGLE_LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 const KIDS_WORDS = [
@@ -45,13 +45,59 @@ const BALLOON_COLORS = [
   '#b026ff', '#ff206e', '#7b2cbf', '#ffff00'
 ];
 
+const SOUND_THEMES = ['synth', 'piano', 'laser', 'water'];
+
 let nextBalloonId = 1;
 let nextBurstId = 1;
 
 export const useTypingGameStore = create((set, get) => ({
   mode: 'letters', // 'letters' or 'words'
-  capsLock: true,  // true = uppercase letters, false = lowercase letters
-  isPaused: false, // true = game paused, false = running (`cntl + enter toggle the game stop and start`)
+  capsLock: true,  // true = uppercase, false = lowercase
+  isPaused: false, // true = paused (`cntl + enter toggle`)
+  
+  // Feature 1: Sound Packs (`synth`, `piano`, `laser`, `water`)
+  soundTheme: 'synth',
+  cycleSoundTheme: () => {
+    const currentIdx = SOUND_THEMES.indexOf(get().soundTheme);
+    const nextTheme = SOUND_THEMES[(currentIdx + 1) % SOUND_THEMES.length];
+    set({ soundTheme: nextTheme });
+  },
+
+  // Feature 2: Superpower states (`rainbow`, `freeze`, `starburst`)
+  activePowerUp: null,
+  powerUpEndTime: 0,
+
+  // Feature 4: Meteor Storm Rush Mode
+  gameStyle: 'normal', // 'normal' or 'rush'
+  rushTimeLeft: 60,
+  rushActive: false,
+  toggleRushMode: () => {
+    const current = get().gameStyle;
+    if (current === 'normal') {
+      set({
+        gameStyle: 'rush',
+        rushTimeLeft: 60,
+        rushActive: true,
+        balloons: [],
+        streak: 0
+      });
+    } else {
+      set({
+        gameStyle: 'normal',
+        rushActive: false,
+        balloons: []
+      });
+    }
+  },
+
+  // Feature 5: Achievement Stats
+  totalWordsTyped: 0,
+  maxCombo: 0,
+  powerUpsCollected: 0,
+  rushCompleted: 0,
+  showBadgesModal: false,
+  toggleBadgesModal: () => set((s) => ({ showBadgesModal: !s.showBadgesModal })),
+
   score: 0,
   streak: 0,
   highScore: 0,
@@ -145,21 +191,25 @@ export const useTypingGameStore = create((set, get) => ({
       text = KIDS_WORDS[Math.floor(Math.random() * KIDS_WORDS.length)];
     }
 
-    // Format text case dynamically based on capsLock setting (`if we press caps lock the letter becomes upper case if we off lower case`)
     text = state.capsLock ? text.toUpperCase() : text.toLowerCase();
 
-    const speed = 0.8 + Math.random() * 0.55;
+    // Determine if this bubble carries a Superpower (`18% chance`)
+    let powerUpType = null;
+    if (Math.random() < 0.18) {
+      const r = Math.random();
+      powerUpType = r < 0.36 ? 'rainbow' : r < 0.68 ? 'freeze' : 'starburst';
+    }
+
+    // Speed formula: if rush mode active (`Meteor Storm`), bubbles rise faster
+    let speed = (0.8 + Math.random() * 0.55) * (state.gameStyle === 'rush' ? 1.55 : 1.0);
     const swaySpeed = 1.6 + Math.random() * 0.8;
     const swayAmount = 0.18 + Math.random() * 0.14;
     const swayPhase = Math.random() * Math.PI * 2;
 
-    const shapeTypes = ['sphere', 'cube', 'cuboid', 'cylinder'];
-    const shapeType = shapeTypes[Math.floor(Math.random() * shapeTypes.length)];
-
     const newBalloon = {
       id: nextBalloonId++,
       text,
-      shapeType,
+      shapeType: 'sphere', // Fully round water bubbles (`1:1:1 strict round`)
       typedIndex: 0,
       position: [bestX, -3.5, bestZ],
       speed,
@@ -167,7 +217,8 @@ export const useTypingGameStore = create((set, get) => ({
       swayAmount,
       swayPhase,
       scale: 0.45,
-      color
+      color,
+      powerUpType
     };
 
     set({ balloons: [...state.balloons, newBalloon] });
@@ -175,12 +226,43 @@ export const useTypingGameStore = create((set, get) => ({
 
   updateBalloons: (delta) => {
     const state = get();
-    if (state.isPaused || state.balloons.length === 0) return;
+    if (state.isPaused) return;
 
-    // 1. First pass: Move upward with buoyant momentum
+    const now = Date.now();
+    // Check expiration of active powerup
+    let currentPowerUp = state.activePowerUp;
+    if (currentPowerUp && now > state.powerUpEndTime) {
+      currentPowerUp = null;
+    }
+
+    // Update Rush Mode Timer
+    let newRushTime = state.rushTimeLeft;
+    let newRushActive = state.rushActive;
+    let rushCompletedBonus = state.rushCompleted;
+
+    if (state.gameStyle === 'rush' && state.rushActive) {
+      newRushTime -= delta;
+      if (newRushTime <= 0) {
+        newRushTime = 0;
+        newRushActive = false;
+        rushCompletedBonus += 1;
+        playWinFanfare();
+      }
+    }
+
+    if (state.balloons.length === 0 && !currentPowerUp && newRushTime === state.rushTimeLeft) {
+      if (currentPowerUp !== state.activePowerUp) {
+        set({ activePowerUp: null });
+      }
+      return;
+    }
+
+    // Apply speed modifier if Freeze Time powerup is active (`0.4x speed`)
+    const speedMultiplier = currentPowerUp === 'freeze' ? 0.4 : 1.0;
+
     const moved = [];
     state.balloons.forEach((b) => {
-      const newY = b.position[1] + b.speed * delta;
+      const newY = b.position[1] + (b.speed * speedMultiplier) * delta;
       if (newY < 6.8) {
         moved.push({
           ...b,
@@ -189,7 +271,7 @@ export const useTypingGameStore = create((set, get) => ({
       }
     });
 
-    // 2. Second pass: Elastic Collision Separation (`push them more` when closer than 1.95 units so letters never stick together!)
+    // Elastic Collision Separation (`push them more` so letters never stick together!)
     const minSeparation = state.mode === 'letters' ? 1.95 : 2.35;
     for (let i = 0; i < moved.length; i++) {
       for (let j = i + 1; j < moved.length; j++) {
@@ -221,10 +303,16 @@ export const useTypingGameStore = create((set, get) => ({
       }
     }
 
-    const now = Date.now();
     const activeBursts = state.bursts.filter((br) => now - br.timestamp < 1200);
 
-    set({ balloons: moved, bursts: activeBursts });
+    set({
+      balloons: moved,
+      bursts: activeBursts,
+      activePowerUp: currentPowerUp,
+      rushTimeLeft: newRushTime,
+      rushActive: newRushActive,
+      rushCompleted: rushCompletedBonus
+    });
   },
 
   updateBursts: () => {
@@ -249,8 +337,33 @@ export const useTypingGameStore = create((set, get) => ({
     if (!target) return;
 
     playBalloonPopSound();
-    const newScore = state.score + (state.mode === 'words' ? 50 : 15) + state.streak * 5;
+
+    let basePoints = (state.mode === 'words' ? 50 : 15) + state.streak * 5;
+    // If Rainbow double points active, multiply by 2 (`Rainbow Superpower`)
+    if (state.activePowerUp === 'rainbow' || target.powerUpType === 'rainbow') {
+      basePoints *= 2;
+    }
+
+    const newScore = state.score + basePoints;
     const newStreak = state.streak + 1;
+    const newMaxCombo = Math.max(state.maxCombo, newStreak);
+    const newWordsTyped = state.totalWordsTyped + (state.mode === 'words' ? 1 : 0);
+    let newPowerUpsCollected = state.powerUpsCollected;
+    let nextActivePowerUp = state.activePowerUp;
+    let nextPowerUpEndTime = state.powerUpEndTime;
+
+    // Handle superpower trigger
+    if (target.powerUpType) {
+      newPowerUpsCollected += 1;
+      playPowerUpSound();
+      if (target.powerUpType === 'rainbow') {
+        nextActivePowerUp = 'rainbow';
+        nextPowerUpEndTime = Date.now() + 15000;
+      } else if (target.powerUpType === 'freeze') {
+        nextActivePowerUp = 'freeze';
+        nextPowerUpEndTime = Date.now() + 10000;
+      }
+    }
 
     const newBurst = {
       id: nextBurstId++,
@@ -264,12 +377,44 @@ export const useTypingGameStore = create((set, get) => ({
       playWinFanfare();
     }
 
+    let remainingBalloons = state.balloons.filter((b) => b.id !== id);
+    let extraBursts = [newBurst];
+
+    // If Starburst superpower triggered, automatically pop up to 3 nearby bubbles!
+    if (target.powerUpType === 'starburst') {
+      const nearby = remainingBalloons
+        .sort((a, b) => {
+          const dA = Math.hypot(a.position[0] - target.position[0], a.position[1] - target.position[1]);
+          const dB = Math.hypot(b.position[0] - target.position[0], b.position[1] - target.position[1]);
+          return dA - dB;
+        })
+        .slice(0, 3);
+
+      nearby.forEach((nb) => {
+        extraBursts.push({
+          id: nextBurstId++,
+          position: [...nb.position],
+          color: nb.color,
+          text: nb.text,
+          timestamp: Date.now()
+        });
+      });
+
+      const nearbyIds = new Set(nearby.map((nb) => nb.id));
+      remainingBalloons = remainingBalloons.filter((b) => !nearbyIds.has(b.id));
+    }
+
     set({
-      balloons: state.balloons.filter((b) => b.id !== id),
-      bursts: [...state.bursts, newBurst],
+      balloons: remainingBalloons,
+      bursts: [...state.bursts, ...extraBursts],
       score: newScore,
       streak: newStreak,
-      highScore: Math.max(state.highScore, newScore)
+      highScore: Math.max(state.highScore, newScore),
+      maxCombo: newMaxCombo,
+      totalWordsTyped: newWordsTyped,
+      powerUpsCollected: newPowerUpsCollected,
+      activePowerUp: nextActivePowerUp,
+      powerUpEndTime: nextPowerUpEndTime
     });
   },
 
@@ -278,7 +423,6 @@ export const useTypingGameStore = create((set, get) => ({
     const state = get();
     if (state.isPaused) return;
 
-    // If Caps Lock key pressed, toggle case for entire game immediately (`if we press caps lock the letter becomes upper case`)
     if (keyChar === 'CapsLock' || keyChar.toLowerCase() === 'capslock') {
       state.toggleCapsLock();
       return;
@@ -288,7 +432,7 @@ export const useTypingGameStore = create((set, get) => ({
     const char = keyChar.toUpperCase();
 
     state.setActiveKey(keyChar);
-    playKeyClickSound();
+    playKeyClickSound(char);
 
     const sorted = [...state.balloons].sort((a, b) => a.position[1] - b.position[1]);
 
@@ -304,7 +448,7 @@ export const useTypingGameStore = create((set, get) => ({
         if (nextIdx >= match.text.length) {
           state.burstBalloonById(match.id);
         } else {
-          playKeyClickSound();
+          playKeyClickSound(char);
           set({
             balloons: state.balloons.map((b) =>
               b.id === match.id ? { ...b, typedIndex: nextIdx } : b
@@ -330,7 +474,7 @@ export const useTypingGameStore = create((set, get) => ({
       if (nextIdx >= target.text.length) {
         state.burstBalloonById(id);
       } else {
-        playKeyClickSound();
+        playKeyClickSound(target.text[target.typedIndex] || 'A');
         set({
           balloons: state.balloons.map((b) =>
             b.id === id ? { ...b, typedIndex: nextIdx } : b
