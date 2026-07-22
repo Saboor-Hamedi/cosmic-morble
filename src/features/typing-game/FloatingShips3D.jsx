@@ -24,7 +24,7 @@ const FloatingWaterOrbItem = React.memo(function FloatingWaterOrbItem({ balloon:
   const bubblesGroupRef = useRef();
   const bubbleRefs = useRef([]);
   
-  const { mode, clickBalloon, moveBalloonById, capsLock } = useTypingGameStore();
+  const { mode, moveBalloonById, capsLock } = useTypingGameStore();
   const theme = useThemeStore((s) => s.theme);
 
   const [isDragging, setIsDragging] = useState(false);
@@ -144,17 +144,7 @@ const FloatingWaterOrbItem = React.memo(function FloatingWaterOrbItem({ balloon:
     try {
       e.target.releasePointerCapture(e.pointerId);
     } catch (_) {}
-
-    const dist = Math.hypot(
-      e.clientX - dragStartRef.current.x,
-      e.clientY - dragStartRef.current.y
-    );
-    const duration = Date.now() - dragStartRef.current.time;
-
-    if (duration < 260 && dist < 12) {
-      clickBalloon(item.id);
-    }
-  }, [isDragging, item.id, clickBalloon]);
+  }, [isDragging]);
 
   const displayText = capsLock ? item.text.toUpperCase() : item.text.toLowerCase();
   
