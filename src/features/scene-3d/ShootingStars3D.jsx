@@ -2,7 +2,7 @@ import React, { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useTypingGameStore } from '../typing-game/useTypingGameStore.js';
 
-const STAR_COUNT = 16;
+const STAR_COUNT = 12;
 const TRAIL_LEN = 12;
 
 // ─── Rich colour palettes per star — head color + trail gradient ───────────
@@ -143,18 +143,17 @@ function launchMeteor(slot, index) {
   const s = slot.current;
   const palette = PALETTES[Math.floor(sr() * PALETTES.length)];
 
-  // Start: spread across the top of the sky
-  s.startX = (sr() - 0.5) * 22;
-  s.startY = 9 + sr() * 5;       // high up
-  s.startZ = -16 - sr() * 10;    // deep background
+  // Start: widely spread across the top of the sky
+  s.startX = (sr() - 0.5) * 30;   // wider horizontal spread
+  s.startY = 9 + sr() * 5;
+  s.startZ = -16 - sr() * 10;
 
-  // End: falls DOWN past the bottom, while zooming forward
-  s.endY = -8 - sr() * 5;        // falls way down off screen
-  s.endZ = -1.5;                  // close to camera
-  s.velX = (sr() - 0.5) * 3.5;  // slight horizontal drift
+  s.endY = -8 - sr() * 5;
+  s.endZ = -1.5;
+  s.velX = (sr() - 0.5) * 2.5;   // reduced horizontal drift
 
-  s.duration = 1400 + sr() * 800;
-  s.delay = index * 130;
+  s.duration = 1600 + sr() * 1000; // longer, more leisurely fall
+  s.delay = index * 320;            // much larger stagger so they scatter in time
   s.startTime = Date.now();
   s.palette = palette;
   s.active = true;
@@ -179,7 +178,7 @@ export const ShootingStars3D = React.memo(function ShootingStars3D() {
     if (streak >= 5 && milestone > lastMilestone.current) {
       lastMilestone.current = milestone;
       // More stars for higher streaks
-      const count = Math.min(STAR_COUNT, 5 + Math.floor(streak / 5));
+      const count = Math.min(STAR_COUNT, 3 + Math.floor(streak / 10));
       let fired = 0;
       for (let i = 0; i < slots.length && fired < count; i++) {
         if (!slots[i].current.active) {
