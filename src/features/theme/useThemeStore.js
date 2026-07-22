@@ -22,6 +22,10 @@ import theme20Img from '../../themes/theme20.png';
 import theme21Img from '../../themes/theme21.png';
 import theme22Img from '../../themes/theme22.png';
 import theme23Img from '../../themes/theme23.png';
+import theme24Img from '../../themes/theme24.png';
+import theme25Img from '../../themes/theme25.png';
+import theme26Img from '../../themes/theme26.png';
+import theme27Img from '../../themes/theme27.png';
 
 const SETTINGS_KEY = 'cosmic_morble_settings_json';
 
@@ -690,6 +694,122 @@ export const THEMES = {
     keyText: '#3e1f00',
     bubbleColor: '#ffcc80',
     bubbleEmissive: '#f5a623'
+  },
+
+  theme24: {
+    id: 'theme24',
+    name: 'Coral Reef Kingdom',
+    icon: '🐠',
+    previewImg: theme24Img,
+    skyGradient: 'linear-gradient(180deg, #003049 0%, #00607a 50%, #00bcd4 100%)',
+    ambientColor: '#e0f7fa',
+    ambientIntensity: 1.0,
+    directionalColor: '#80deea',
+    cloudColor: '#e0f7fa',
+    cloudEmissive: '#4dd0e1',
+    plateauColor: '#006064',
+    plateauAccent: '#00bcd4',
+    rockBaseColor: '#003049',
+    rockAccentColor: '#004d61',
+    waterColor: '#80deea',
+    treeType: 'crystal',
+    treeColor: '#00bcd4',
+    treeAccent: '#e0f7fa',
+    keyboardTray: '#003049',
+    keyboardTrim: '#006064',
+    keyRowColors: ['#e0f7fa', '#b2ebf2', '#80deea'],
+    keySpacebar: '#00bcd4',
+    keyActive: '#ffd600',
+    keyText: '#003049',
+    bubbleColor: '#80deea',
+    bubbleEmissive: '#00bcd4'
+  },
+
+  theme25: {
+    id: 'theme25',
+    name: 'Aurora Ice Palace',
+    icon: '🌌',
+    previewImg: theme25Img,
+    skyGradient: 'linear-gradient(180deg, #0d0221 0%, #1a0533 50%, #3b1f6e 100%)',
+    ambientColor: '#e8eaf6',
+    ambientIntensity: 0.95,
+    directionalColor: '#b39ddb',
+    cloudColor: '#e8eaf6',
+    cloudEmissive: '#7c4dff',
+    plateauColor: '#4527a0',
+    plateauAccent: '#7c4dff',
+    rockBaseColor: '#1a0533',
+    rockAccentColor: '#311b92',
+    waterColor: '#b39ddb',
+    treeType: 'crystal',
+    treeColor: '#7c4dff',
+    treeAccent: '#e8eaf6',
+    keyboardTray: '#1a0533',
+    keyboardTrim: '#311b92',
+    keyRowColors: ['#e8eaf6', '#d1c4e9', '#b39ddb'],
+    keySpacebar: '#7c4dff',
+    keyActive: '#00e5ff',
+    keyText: '#1a0533',
+    bubbleColor: '#b39ddb',
+    bubbleEmissive: '#7c4dff'
+  },
+
+  theme26: {
+    id: 'theme26',
+    name: 'Sakura Sunset',
+    icon: '🌸',
+    previewImg: theme26Img,
+    skyGradient: 'linear-gradient(180deg, #4a0030 0%, #c2185b 50%, #f8bbd0 100%)',
+    ambientColor: '#fce4ec',
+    ambientIntensity: 1.0,
+    directionalColor: '#f48fb1',
+    cloudColor: '#fce4ec',
+    cloudEmissive: '#f48fb1',
+    plateauColor: '#ad1457',
+    plateauAccent: '#f06292',
+    rockBaseColor: '#4a0030',
+    rockAccentColor: '#880e4f',
+    waterColor: '#f8bbd0',
+    treeType: 'crystal',
+    treeColor: '#f06292',
+    treeAccent: '#fce4ec',
+    keyboardTray: '#4a0030',
+    keyboardTrim: '#880e4f',
+    keyRowColors: ['#fce4ec', '#f8bbd0', '#f48fb1'],
+    keySpacebar: '#f06292',
+    keyActive: '#ffd600',
+    keyText: '#4a0030',
+    bubbleColor: '#f48fb1',
+    bubbleEmissive: '#f06292'
+  },
+
+  theme27: {
+    id: 'theme27',
+    name: 'Dragon Volcano',
+    icon: '🐉',
+    previewImg: theme27Img,
+    skyGradient: 'linear-gradient(180deg, #1a0000 0%, #7f0000 50%, #ff3d00 100%)',
+    ambientColor: '#fbe9e7',
+    ambientIntensity: 1.0,
+    directionalColor: '#ff6e40',
+    cloudColor: '#fbe9e7',
+    cloudEmissive: '#ff6e40',
+    plateauColor: '#bf360c',
+    plateauAccent: '#ff3d00',
+    rockBaseColor: '#1a0000',
+    rockAccentColor: '#7f0000',
+    waterColor: '#ff6e40',
+    treeType: 'crystal',
+    treeColor: '#ff3d00',
+    treeAccent: '#fbe9e7',
+    keyboardTray: '#1a0000',
+    keyboardTrim: '#7f0000',
+    keyRowColors: ['#fbe9e7', '#ffccbc', '#ff8a65'],
+    keySpacebar: '#ff3d00',
+    keyActive: '#ffd600',
+    keyText: '#1a0000',
+    bubbleColor: '#ff6e40',
+    bubbleEmissive: '#ff3d00'
   }
 };
 
