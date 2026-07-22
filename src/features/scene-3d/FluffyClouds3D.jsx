@@ -1,55 +1,80 @@
-import React, { useRef, useMemo, useState } from 'react';
+import React, { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { playHoverSound } from '../audio/SoundSynthesizer.js';
-import { useThemeStore } from '../theme/useThemeStore.js';
+import { useTypingGameStore } from '../typing-game/useTypingGameStore.js';
 import * as THREE from 'three';
 
-const InteractiveCloudCluster = React.memo(function InteractiveCloudCluster({ cloud }) {
+const CLOUD_DESIGNS = {
+  cumulus: [
+    { type: 'sphere', pos: [0, 0.2, 0], args: [0.65, 24, 24] },
+    { type: 'sphere', pos: [-0.55, 0.05, 0.1], args: [0.48, 24, 24] },
+    { type: 'sphere', pos: [0.55, 0.05, -0.1], args: [0.46, 24, 24] },
+    { type: 'sphere', pos: [-0.25, 0.28, -0.2], args: [0.42, 24, 24] },
+    { type: 'sphere', pos: [0.28, 0.22, 0.2], args: [0.44, 24, 24] },
+    { type: 'cylinder', pos: [0, -0.15, 0], args: [0.5, 0.5, 1.2, 20], rot: [0, 0, Math.PI / 2] }
+  ],
+  stratus: [
+    { type: 'sphere', pos: [-0.8, 0, 0], args: [0.38, 20, 20] },
+    { type: 'sphere', pos: [-0.35, 0.12, 0.08], args: [0.45, 20, 20] },
+    { type: 'sphere', pos: [0.15, 0.15, -0.05], args: [0.48, 20, 20] },
+    { type: 'sphere', pos: [0.65, 0.08, 0.1], args: [0.42, 20, 20] },
+    { type: 'sphere', pos: [1.05, -0.05, 0], args: [0.35, 20, 20] },
+    { type: 'cylinder', pos: [0.1, -0.12, 0], args: [0.35, 0.35, 1.9, 20], rot: [0, 0, Math.PI / 2] }
+  ],
+  twin_puff: [
+    { type: 'sphere', pos: [-0.45, 0.15, 0], args: [0.52, 24, 24] },
+    { type: 'sphere', pos: [0.45, 0.1, 0.1], args: [0.48, 24, 24] },
+    { type: 'sphere', pos: [0, -0.05, -0.1], args: [0.45, 24, 24] },
+    { type: 'cylinder', pos: [0, -0.16, 0], args: [0.42, 0.42, 1.1, 20], rot: [0, 0, Math.PI / 2] }
+  ],
+  cotton_bank: [
+    { type: 'sphere', pos: [0, 0.3, 0], args: [0.7, 24, 24] },
+    { type: 'sphere', pos: [-0.65, 0.12, 0.15], args: [0.55, 24, 24] },
+    { type: 'sphere', pos: [0.65, 0.14, -0.12], args: [0.54, 24, 24] },
+    { type: 'sphere', pos: [-1.15, -0.05, 0.05], args: [0.42, 24, 24] },
+    { type: 'sphere', pos: [1.15, -0.04, -0.05], args: [0.4, 24, 24] },
+    { type: 'cylinder', pos: [0, -0.18, 0], args: [0.55, 0.55, 2.2, 20], rot: [0, 0, Math.PI / 2] }
+  ]
+};
+
+const OrganicFloatingCloud = React.memo(function OrganicFloatingCloud({ cloud }) {
   const groupRef = useRef();
-  const [puffScale, setPuffScale] = useState(1);
-  const [hovered, setHovered] = useState(false);
-  const theme = useThemeStore((s) => s.theme);
+  const isPaused = useTypingGameStore((s) => s.isPaused);
 
   const puffs = useMemo(() => {
-    return [
-      { type: 'sphere', pos: [-0.48, 0, 0], args: [0.42, 24, 24] },
-      { type: 'sphere', pos: [0, 0.16, 0], args: [0.55, 24, 24] },
-      { type: 'sphere', pos: [0.48, 0, 0], args: [0.4, 24, 24] },
-      { type: 'cylinder', pos: [0, -0.12, 0], args: [0.38, 0.38, 0.96, 20], rot: [0, 0, Math.PI / 2] }
-    ];
-  }, []);
+    return CLOUD_DESIGNS[cloud.designType || 'cumulus'] || CLOUD_DESIGNS.cumulus;
+  }, [cloud.designType]);
 
   useFrame((state, delta) => {
-    if (!groupRef.current) return;
-    
+    if (!groupRef.current || isPaused) return;
+    const t = state.clock.elapsedTime;
+
+    // Multi-directional drifting: right or left
     groupRef.current.position.x += cloud.speed * delta;
-    if (groupRef.current.position.x > 12) {
-      groupRef.current.position.x = -12;
+    if (cloud.speed > 0 && groupRef.current.position.x > 14.5) {
+      groupRef.current.position.x = -14.5;
+    } else if (cloud.speed < 0 && groupRef.current.position.x < -14.5) {
+      groupRef.current.position.x = 14.5;
     }
 
-    const targetScale = cloud.scale * (hovered ? 1.12 : puffScale);
-    groupRef.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), delta * 12);
+    // Gentle organic vertical floating & swaying
+    const swayY = Math.sin(t * (cloud.swaySpeed || 1.1) + (cloud.swayPhase || 0)) * (cloud.swayHeight || 0.16);
+    const swayZ = Math.cos(t * 0.9 + (cloud.swayPhase || 0)) * 0.06;
+    const tiltZ = Math.sin(t * 0.7 + (cloud.swayPhase || 0)) * 0.03;
+
+    groupRef.current.position.y = cloud.baseY + swayY;
+    groupRef.current.position.z = cloud.baseZ + swayZ;
+    groupRef.current.rotation.z = tiltZ;
   });
 
   return (
     <group
       ref={groupRef}
-      position={cloud.position}
+      position={[cloud.startX, cloud.baseY, cloud.baseZ]}
       scale={cloud.scale}
-      onPointerOver={(e) => {
-        e.stopPropagation();
-        setHovered(true);
-      }}
-      onPointerOut={() => setHovered(false)}
-      onClick={(e) => {
-        e.stopPropagation();
-        setPuffScale(1.25);
-        playHoverSound();
-        setTimeout(() => setPuffScale(1.0), 220);
-      }}
+      raycast={() => null} // No pointer trapping or click bursts (`totally clean non-interactive clouds`)
     >
       {puffs.map((puff, idx) => (
-        <mesh key={idx} position={puff.pos} rotation={puff.rot || [0, 0, 0]}>
+        <mesh key={idx} position={puff.pos} rotation={puff.rot || [0, 0, 0]} raycast={() => null}>
           {puff.type === 'sphere' ? (
             <sphereGeometry args={puff.args} />
           ) : (
@@ -57,26 +82,13 @@ const InteractiveCloudCluster = React.memo(function InteractiveCloudCluster({ cl
           )}
           <meshStandardMaterial
             color="#ffffff"
-            roughness={0.9}
-            metalness={0.02}
-            emissive={hovered ? '#e0f2fe' : '#ffffff'}
-            emissiveIntensity={hovered ? 0.35 : 0.08}
+            roughness={0.92}
+            metalness={0.04}
+            emissive="#f8fafc"
+            emissiveIntensity={0.06}
           />
         </mesh>
       ))}
-
-      {hovered && (
-        <group position={[0, -0.4, 0]}>
-          <mesh position={[-0.3, -0.1, 0.2]}>
-            <sphereGeometry args={[0.04, 8, 8]} />
-            <meshStandardMaterial color="#38bdf8" emissive="#38bdf8" emissiveIntensity={0.8} />
-          </mesh>
-          <mesh position={[0.3, -0.2, 0.1]}>
-            <sphereGeometry args={[0.035, 8, 8]} />
-            <meshStandardMaterial color="#60a5fa" emissive="#60a5fa" emissiveIntensity={0.8} />
-          </mesh>
-        </group>
-      )}
     </group>
   );
 });
@@ -84,33 +96,28 @@ const InteractiveCloudCluster = React.memo(function InteractiveCloudCluster({ cl
 export const FluffyClouds3D = React.memo(function FluffyClouds3D() {
   const clouds = useMemo(() => {
     return [
-      // Far Left Cluster
-      { id: 1, position: [-10.5, 6.4, -4.5], speed: 0.24, scale: 0.95 },
-      { id: 2, position: [-8.8, 5.2, -4.8], speed: 0.18, scale: 0.88 },
-      { id: 3, position: [-7.2, 6.6, -5.2], speed: 0.28, scale: 1.05 },
-      { id: 4, position: [-5.8, 5.6, -4.6], speed: 0.22, scale: 0.92 },
-      { id: 5, position: [-4.4, 6.2, -5.0], speed: 0.3, scale: 0.85 },
+      // Upper Altitude Drift Right (+speed)
+      { id: 1, designType: 'cumulus', startX: -11.5, baseY: 7.2, baseZ: -5.4, speed: 0.32, scale: 1.05, swaySpeed: 1.2, swayHeight: 0.18, swayPhase: 0.5 },
+      { id: 2, designType: 'stratus', startX: -4.2, baseY: 7.8, baseZ: -6.2, speed: 0.25, scale: 1.15, swaySpeed: 0.9, swayHeight: 0.14, swayPhase: 1.8 },
+      { id: 3, designType: 'cotton_bank', startX: 3.8, baseY: 7.4, baseZ: -5.8, speed: 0.28, scale: 1.1, swaySpeed: 1.0, swayHeight: 0.2, swayPhase: 3.1 },
+      { id: 4, designType: 'twin_puff', startX: 10.5, baseY: 6.9, baseZ: -5.0, speed: 0.36, scale: 0.95, swaySpeed: 1.4, swayHeight: 0.16, swayPhase: 4.2 },
 
-      // Center Cluster
-      { id: 6, position: [-2.8, 5.4, -4.7], speed: 0.2, scale: 0.98 },
-      { id: 7, position: [-1.2, 6.5, -5.1], speed: 0.26, scale: 1.1 },
-      { id: 8, position: [0.5, 5.1, -4.6], speed: 0.21, scale: 0.86 },
-      { id: 9, position: [2.2, 6.3, -4.9], speed: 0.27, scale: 0.94 },
-      { id: 10, position: [3.8, 5.5, -5.2], speed: 0.23, scale: 0.89 },
+      // Mid/Lower Altitude Drift Left (-speed) for organic multi-directional crossing
+      { id: 5, designType: 'cotton_bank', startX: 12.0, baseY: 5.6, baseZ: -4.6, speed: -0.26, scale: 0.92, swaySpeed: 1.1, swayHeight: 0.15, swayPhase: 0.9 },
+      { id: 6, designType: 'cumulus', startX: 5.2, baseY: 6.1, baseZ: -5.2, speed: -0.31, scale: 1.0, swaySpeed: 1.3, swayHeight: 0.19, swayPhase: 2.4 },
+      { id: 7, designType: 'stratus', startX: -1.8, baseY: 5.4, baseZ: -4.4, speed: -0.22, scale: 0.88, swaySpeed: 0.85, swayHeight: 0.13, swayPhase: 3.7 },
+      { id: 8, designType: 'twin_puff', startX: -8.6, baseY: 6.0, baseZ: -4.9, speed: -0.29, scale: 0.94, swaySpeed: 1.25, swayHeight: 0.17, swayPhase: 5.0 },
 
-      // Far Right Cluster
-      { id: 11, position: [5.4, 6.6, -4.5], speed: 0.29, scale: 1.02 },
-      { id: 12, position: [7.0, 5.3, -4.8], speed: 0.19, scale: 0.88 },
-      { id: 13, position: [8.6, 6.4, -5.1], speed: 0.25, scale: 0.96 },
-      { id: 14, position: [10.2, 5.6, -4.7], speed: 0.22, scale: 0.84 },
-      { id: 15, position: [11.6, 6.2, -5.0], speed: 0.28, scale: 0.92 }
+      // Additional varied background layer clouds
+      { id: 9, designType: 'stratus', startX: -13.0, baseY: 6.6, baseZ: -6.5, speed: 0.19, scale: 1.2, swaySpeed: 0.8, swayHeight: 0.12, swayPhase: 1.1 },
+      { id: 10, designType: 'cumulus', startX: 8.0, baseY: 8.2, baseZ: -6.8, speed: -0.18, scale: 1.18, swaySpeed: 0.75, swayHeight: 0.14, swayPhase: 4.8 }
     ];
   }, []);
 
   return (
     <group>
       {clouds.map((c) => (
-        <InteractiveCloudCluster key={c.id} cloud={c} />
+        <OrganicFloatingCloud key={c.id} cloud={c} />
       ))}
     </group>
   );

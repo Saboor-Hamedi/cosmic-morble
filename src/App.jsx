@@ -32,6 +32,14 @@ function GlobalKeyboardListener() {
         return;
       }
 
+      // Check for Ctrl + Alt mode switch (`cntl + alt switch between letter and word`)
+      if (e.ctrlKey && e.altKey) {
+        e.preventDefault();
+        const currentMode = useTypingGameStore.getState().mode;
+        useTypingGameStore.getState().setMode(currentMode === 'letters' ? 'words' : 'letters');
+        return;
+      }
+
       // Ignore modifier combinations (except pure letters/space/backspace/capslock)
       if (e.metaKey || e.ctrlKey || e.altKey) return;
 
