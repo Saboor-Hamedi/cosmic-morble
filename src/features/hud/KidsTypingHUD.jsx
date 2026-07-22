@@ -20,10 +20,10 @@ export const KidsTypingHUD = memo(function KidsTypingHUD() {
 
       <div style={{
         position: 'absolute',
-        top: '22px',
+        top: '46px',
         left: 0,
         right: 0,
-        padding: '0 24px',
+        padding: '0 32px',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'flex-start',
