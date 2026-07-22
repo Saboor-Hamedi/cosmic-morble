@@ -3,7 +3,7 @@ import { useTypingGameStore } from '../typing-game/useTypingGameStore.js';
 import { useThemeStore } from '../theme/useThemeStore.js';
 
 export const KidsTypingHUD = memo(function KidsTypingHUD() {
-  const { score, mode, setMode, capsLock, toggleCapsLock } = useTypingGameStore();
+  const { score, streak, highScore, mode, setMode, capsLock, toggleCapsLock } = useTypingGameStore();
   const { theme, cycleTheme } = useThemeStore();
 
   return (
@@ -20,24 +20,63 @@ export const KidsTypingHUD = memo(function KidsTypingHUD() {
       zIndex: 50,
       fontFamily: `system-ui, -apple-system, sans-serif`
     }}>
-      {/* Subtle, Clean Score Display with 5px round badge (`subtle 5px round all the same theme`) */}
-      <div style={{
-        background: 'rgba(15, 23, 42, 0.45)',
-        backdropFilter: 'blur(10px)',
-        border: '1px solid rgba(255, 255, 255, 0.15)',
-        borderRadius: '5px',
-        padding: '6px 14px',
-        fontSize: '15px',
-        fontWeight: 600,
-        color: '#cbd5e1',
-        letterSpacing: '0.5px',
-        pointerEvents: 'auto',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '8px'
-      }}>
-        <span>Score:</span>
-        <span style={{ color: '#ffffff', fontWeight: 700, fontSize: '16px' }}>{score.toLocaleString()}</span>
+      {/* Subtle, Clean Score, Streak & High Score Display (`subtle 5px round badges`) */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', pointerEvents: 'auto' }}>
+        <div style={{
+          background: 'rgba(15, 23, 42, 0.45)',
+          backdropFilter: 'blur(10px)',
+          border: '1px solid rgba(255, 255, 255, 0.15)',
+          borderRadius: '5px',
+          padding: '6px 14px',
+          fontSize: '15px',
+          fontWeight: 600,
+          color: '#cbd5e1',
+          letterSpacing: '0.5px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px'
+        }}>
+          <span>Score:</span>
+          <span style={{ color: '#ffffff', fontWeight: 700, fontSize: '16px' }}>{score.toLocaleString()}</span>
+        </div>
+
+        {streak > 1 && (
+          <div style={{
+            background: 'rgba(249, 115, 22, 0.25)',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid #f97316',
+            borderRadius: '5px',
+            padding: '6px 14px',
+            fontSize: '14px',
+            fontWeight: 700,
+            color: '#ffedd5',
+            boxShadow: '0 0 16px rgba(249, 115, 22, 0.35)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            animation: 'pulse 1.5s infinite'
+          }}>
+            <span>🔥 {streak}x Combo!</span>
+          </div>
+        )}
+
+        {highScore > 0 && (
+          <div style={{
+            background: 'rgba(234, 179, 8, 0.2)',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(234, 179, 8, 0.4)',
+            borderRadius: '5px',
+            padding: '6px 12px',
+            fontSize: '13px',
+            fontWeight: 600,
+            color: '#fef08a',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px'
+          }}>
+            <span>🏆 Best: {highScore.toLocaleString()}</span>
+          </div>
+        )}
       </div>
 
       {/* Subtle Mode Controls, Caps Lock Blob, and Theme Switcher (`all subtle 5px round`) */}

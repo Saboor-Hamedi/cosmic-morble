@@ -9,6 +9,8 @@ import theme7Img from '../../themes/theme7.png';
 import theme8Img from '../../themes/theme8.png';
 import theme9Img from '../../themes/theme9.png';
 import theme10Img from '../../themes/theme10.png';
+import theme11Img from '../../themes/theme11.png';
+import theme12Img from '../../themes/theme12.png';
 
 const SETTINGS_KEY = 'cosmic_morble_settings_json';
 
@@ -312,6 +314,62 @@ export const THEMES = {
     keyText: '#1e1b4b',
     bubbleColor: '#818cf8',
     bubbleEmissive: '#4338ca'
+  },
+  theme11: {
+    id: 'theme11',
+    name: 'Galactic Candyland',
+    icon: '🍭',
+    previewImg: theme11Img,
+    skyGradient: 'linear-gradient(180deg, #38006b 0%, #7c4dff 50%, #ff4081 100%)',
+    ambientColor: '#f8bbd0',
+    ambientIntensity: 0.95,
+    directionalColor: '#ff80ab',
+    cloudColor: '#fce4ec',
+    cloudEmissive: '#ff80ab',
+    plateauColor: '#ff4081',
+    plateauAccent: '#ff80ab',
+    rockBaseColor: '#4a148c',
+    rockAccentColor: '#7c4dff',
+    waterColor: '#ff80ab',
+    treeType: 'crystal',
+    treeColor: '#ff4081',
+    treeAccent: '#ff80ab',
+    keyboardTray: '#4a148c',
+    keyboardTrim: '#7c4dff',
+    keyRowColors: ['#fce4ec', '#f8bbd0', '#ff80ab'],
+    keySpacebar: '#ff4081',
+    keyActive: '#00e676',
+    keyText: '#4a148c',
+    bubbleColor: '#ff80ab',
+    bubbleEmissive: '#d500f9'
+  },
+  theme12: {
+    id: 'theme12',
+    name: 'Deep Atlantis Reef',
+    icon: '🧜‍♀️',
+    previewImg: theme12Img,
+    skyGradient: 'linear-gradient(180deg, #001e38 0%, #004d61 50%, #00bcd4 100%)',
+    ambientColor: '#e0f7fa',
+    ambientIntensity: 0.95,
+    directionalColor: '#18ffff',
+    cloudColor: '#e0f7fa',
+    cloudEmissive: '#00e5ff',
+    plateauColor: '#00acc1',
+    plateauAccent: '#26c6da',
+    rockBaseColor: '#00363a',
+    rockAccentColor: '#006064',
+    waterColor: '#18ffff',
+    treeType: 'crystal',
+    treeColor: '#00e5ff',
+    treeAccent: '#84ffff',
+    keyboardTray: '#00363a',
+    keyboardTrim: '#006064',
+    keyRowColors: ['#e0f7fa', '#b2ebf2', '#80deea'],
+    keySpacebar: '#00e5ff',
+    keyActive: '#ffd600',
+    keyText: '#00363a',
+    bubbleColor: '#18ffff',
+    bubbleEmissive: '#00838f'
   }
 };
 
