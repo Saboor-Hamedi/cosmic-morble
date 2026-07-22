@@ -1,6 +1,6 @@
 import React, { useRef, useState, useCallback, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Text } from '@react-three/drei';
+import { Text, MeshDistortionMaterial } from '@react-three/drei';
 import { useTypingGameStore } from './useTypingGameStore.js';
 import { useThemeStore } from '../theme/useThemeStore.js';
 import * as THREE from 'three';
@@ -21,7 +21,8 @@ const FloatingWaterOrbItem = React.memo(function FloatingWaterOrbItem({ balloon:
   const waveRef1 = useRef();
   const waveRef2 = useRef();
   const letterRef = useRef();
-  const innerBubblesRef = useRef();
+  const bubblesGroupRef = useRef();
+  const bubbleRefs = useRef([]);
   
   const { mode, clickBalloon, moveBalloonById, capsLock } = useTypingGameStore();
   const theme = useThemeStore((s) => s.theme);
@@ -37,7 +38,18 @@ const FloatingWaterOrbItem = React.memo(function FloatingWaterOrbItem({ balloon:
     return FUN_CANDY_COLORS[item.id % FUN_CANDY_COLORS.length];
   }, [item.id]);
 
-  useFrame((state) => {
+  // Initial offsets for tiny air bubbles rising inside the water
+  const internalBubblesData = useMemo(() => {
+    return [
+      { x: 0.28, y: -0.3, z: 0.15, speed: 0.35, size: 0.055 },
+      { x: -0.25, y: -0.1, z: 0.2, speed: 0.42, size: 0.045 },
+      { x: 0.12, y: 0.1, z: -0.22, speed: 0.38, size: 0.038 },
+      { x: -0.18, y: -0.38, z: -0.15, speed: 0.48, size: 0.042 },
+      { x: 0.05, y: -0.25, z: 0.28, speed: 0.31, size: 0.05 }
+    ];
+  }, []);
+
+  useFrame((state, delta) => {
     if (!outerGroupRef.current || isDragging) return;
     const t = state.clock.elapsedTime;
     
@@ -51,22 +63,18 @@ const FloatingWaterOrbItem = React.memo(function FloatingWaterOrbItem({ balloon:
       item.position[2] + swayZ
     );
 
-    // Subtle organic jelly-water elasticity (`improve the shape` so water feels squishy & alive)
-    const jellyPulse = Math.sin(t * 3.2 + item.id) * 0.022;
+    // Strictly round scale (`100% equal width and height at all times`, NO oval squishing or eggs!)
     const baseScale = (item.scale || 0.45) * 2.3;
     const hoverScaleBonus = hovered ? 1.08 : 1.0;
-    outerGroupRef.current.scale.set(
-      baseScale * (1 + jellyPulse) * hoverScaleBonus,
-      baseScale * (1 - jellyPulse) * hoverScaleBonus,
-      baseScale * hoverScaleBonus
-    );
+    const strictRoundScale = baseScale * hoverScaleBonus;
+    outerGroupRef.current.scale.set(strictRoundScale, strictRoundScale, strictRoundScale);
 
     // Outer water sphere shimmer
     if (orbMeshRef.current) {
       orbMeshRef.current.rotation.y = t * 0.2 + item.id;
     }
 
-    // Internal liquid water waves swaying (`the inside is great`)
+    // Internal liquid water waves swaying (`looks like actual water caustics`)
     if (waveRef1.current) {
       waveRef1.current.rotation.x = Math.sin(t * 1.8 + item.id) * 0.2;
       waveRef1.current.position.y = Math.sin(t * 2.4 + item.id) * 0.04;
@@ -84,11 +92,20 @@ const FloatingWaterOrbItem = React.memo(function FloatingWaterOrbItem({ balloon:
       letterRef.current.scale.set(letterScale, letterScale, letterScale);
     }
 
-    // Slow orbit of tiny internal water bubbles right inside the liquid
-    if (innerBubblesRef.current) {
-      innerBubblesRef.current.rotation.y = t * 0.7;
-      innerBubblesRef.current.rotation.z = Math.sin(t * 0.5) * 0.15;
+    // Animate tiny internal air bubbles physically rising up through the liquid water
+    if (bubblesGroupRef.current) {
+      bubblesGroupRef.current.rotation.y = t * 0.4;
     }
+    bubbleRefs.current.forEach((mesh, idx) => {
+      if (mesh) {
+        const data = internalBubblesData[idx];
+        let newY = mesh.position.y + data.speed * delta;
+        if (newY > 0.45) {
+          newY = -0.45;
+        }
+        mesh.position.y = newY;
+      }
+    });
   });
 
   const handlePointerDown = useCallback((e) => {
@@ -141,7 +158,7 @@ const FloatingWaterOrbItem = React.memo(function FloatingWaterOrbItem({ balloon:
 
   const displayText = capsLock ? item.text.toUpperCase() : item.text.toLowerCase();
   
-  // Base scale right sized for kids (`width and height strictly equal: [baseScale, baseScale, baseScale]`)
+  // Strictly equal width and height (`width and height are strictly 1:1:1 round`)
   const baseScale = (item.scale || 0.45) * 2.3;
   const uniformScale = [baseScale, baseScale, baseScale];
 
@@ -159,47 +176,49 @@ const FloatingWaterOrbItem = React.memo(function FloatingWaterOrbItem({ balloon:
       onPointerOut={(e) => { e.stopPropagation(); setHovered(false); }}
       style={{ cursor: isDragging ? 'grabbing' : 'pointer' }}
     >
-      {/* 1. Magical Outer Water Aura Halo (`improve the shape` so water spheres glow softly in front of dark backgrounds) */}
+      {/* 1. Soft Enchanted Outer Water Aura Halo (`sphere is perfectly round: [0.74]`) */}
       <mesh renderOrder={0}>
         <sphereGeometry args={[0.74, 32, 32]} />
         <meshStandardMaterial
           color={orbColor}
           emissive={orbColor}
-          emissiveIntensity={hovered ? 0.9 : 0.45}
+          emissiveIntensity={hovered ? 0.9 : 0.4}
           transparent
-          opacity={hovered ? 0.35 : 0.18}
+          opacity={hovered ? 0.35 : 0.15}
           depthWrite={false}
         />
       </mesh>
 
-      {/* 2. Single Unified Crystal Wet Liquid Water Sphere (`one clean boundary without 2 layers`, `depthWrite={false}`) */}
+      {/* 2. Fluid Liquid Water Drop (`MeshDistortionMaterial` gives real organic water ripples across the surface while staying 100% round!) */}
       <mesh ref={orbMeshRef} renderOrder={1}>
         <sphereGeometry args={[0.72, 64, 64]} />
-        <meshPhysicalMaterial
+        <MeshDistortionMaterial
           color={orbColor}
-          roughness={0.04}
+          speed={2.2}
+          distortion={0.14}
+          roughness={0.03}
           metalness={0.05}
-          transmission={0.65}
+          transmission={0.72}
           ior={1.333}
           thickness={1.6}
           clearcoat={1.0}
           clearcoatRoughness={0.02}
           transparent
-          opacity={0.82}
+          opacity={0.84}
           depthWrite={false}
         />
       </mesh>
 
-      {/* 3. Internal Water Ripple Waves floating inside the sphere (`the inside is great`) */}
+      {/* 3. Shimmering Internal Water Caustic Waves floating inside the liquid (`looks like actual water currents`) */}
       <group renderOrder={3}>
         <mesh ref={waveRef1} position={[0, -0.05, 0]} rotation={[Math.PI / 2, 0, 0]}>
           <circleGeometry args={[0.64, 32]} />
           <meshStandardMaterial
             color="#ffffff"
             emissive={orbColor}
-            emissiveIntensity={0.6}
+            emissiveIntensity={0.65}
             transparent
-            opacity={0.4}
+            opacity={0.45}
             side={THREE.DoubleSide}
             depthWrite={false}
           />
@@ -209,39 +228,45 @@ const FloatingWaterOrbItem = React.memo(function FloatingWaterOrbItem({ balloon:
           <meshStandardMaterial
             color="#e0f2fe"
             emissive="#ffffff"
-            emissiveIntensity={0.5}
+            emissiveIntensity={0.55}
             transparent
-            opacity={0.3}
+            opacity={0.35}
             side={THREE.DoubleSide}
             depthWrite={false}
           />
         </mesh>
       </group>
 
-      {/* 4. Wet Surface Specular Glint / Gloss Highlight so it glistens like a real water drop */}
+      {/* 4. Wet Surface Specular Glint / Gloss Highlight near the top so it glistens like a real water droplet */}
       <mesh position={[-0.26, 0.34, 0.5]} renderOrder={4}>
         <sphereGeometry args={[0.075, 16, 16]} />
-        <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={1.2} transparent opacity={0.85} depthWrite={false} />
+        <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={1.2} transparent opacity={0.88} depthWrite={false} />
       </mesh>
       <mesh position={[-0.15, 0.44, 0.45]} renderOrder={4}>
         <sphereGeometry args={[0.04, 16, 16]} />
-        <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={1.0} transparent opacity={0.8} depthWrite={false} />
+        <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={1.0} transparent opacity={0.82} depthWrite={false} />
       </mesh>
 
-      {/* 5. Tiny Orbiting Internal Water Bubbles inside the liquid fill */}
-      <group ref={innerBubblesRef} renderOrder={5}>
-        <mesh position={[0.34, 0.25, 0.15]}>
-          <sphereGeometry args={[0.055, 16, 16]} />
-          <meshPhysicalMaterial color="#ffffff" transmission={0.9} ior={1.333} roughness={0.05} transparent opacity={0.85} depthWrite={false} />
-        </mesh>
-        <mesh position={[-0.3, -0.28, 0.2]}>
-          <sphereGeometry args={[0.045, 16, 16]} />
-          <meshPhysicalMaterial color="#ffffff" transmission={0.9} ior={1.333} roughness={0.05} transparent opacity={0.85} depthWrite={false} />
-        </mesh>
-        <mesh position={[0.18, -0.34, -0.18]}>
-          <sphereGeometry args={[0.038, 16, 16]} />
-          <meshPhysicalMaterial color="#ffffff" transmission={0.9} ior={1.333} roughness={0.05} transparent opacity={0.85} depthWrite={false} />
-        </mesh>
+      {/* 5. Live Effervescent Air Bubbles physically bubbling up through the liquid water right inside the sphere */}
+      <group ref={bubblesGroupRef} renderOrder={5}>
+        {internalBubblesData.map((data, idx) => (
+          <mesh
+            key={idx}
+            ref={(el) => { bubbleRefs.current[idx] = el; }}
+            position={[data.x, data.y, data.z]}
+          >
+            <sphereGeometry args={[data.size, 16, 16]} />
+            <meshPhysicalMaterial
+              color="#ffffff"
+              transmission={0.92}
+              ior={1.333}
+              roughness={0.04}
+              transparent
+              opacity={0.88}
+              depthWrite={false}
+            />
+          </mesh>
+        ))}
       </group>
 
       {/* 6. Fun, Playful Candy/Jewel Letters right inside the exact center ([0, 0, 0]) of the water orb (`make them more fun`) */}
