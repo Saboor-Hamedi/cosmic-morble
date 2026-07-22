@@ -3,7 +3,6 @@ import { useFrame } from '@react-three/fiber';
 import { Text } from '@react-three/drei';
 import { useTypingGameStore } from './useTypingGameStore.js';
 import { useThemeStore } from '../theme/useThemeStore.js';
-import { CosmicBuddy3D } from '../scene-3d/CosmicBuddy3D.jsx';
 import * as THREE from 'three';
 
 const FUN_CANDY_COLORS = [
@@ -326,7 +325,6 @@ export const FloatingShips3D = React.memo(function FloatingShips3D() {
 
   return (
     <group>
-      <CosmicBuddy3D />
       {items.map((item) => (
         <FloatingWaterOrbItem key={item.id} balloon={item} />
       ))}

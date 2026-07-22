@@ -96,21 +96,19 @@ const OrganicFloatingCloud = React.memo(function OrganicFloatingCloud({ cloud })
 export const FluffyClouds3D = React.memo(function FluffyClouds3D() {
   const clouds = useMemo(() => {
     return [
-      // Upper Altitude Drift Right (+speed)
-      { id: 1, designType: 'cumulus', startX: -11.5, baseY: 7.2, baseZ: -5.4, speed: 0.32, scale: 1.05, swaySpeed: 1.2, swayHeight: 0.18, swayPhase: 0.5 },
-      { id: 2, designType: 'stratus', startX: -4.2, baseY: 7.8, baseZ: -6.2, speed: 0.25, scale: 1.15, swaySpeed: 0.9, swayHeight: 0.14, swayPhase: 1.8 },
-      { id: 3, designType: 'cotton_bank', startX: 3.8, baseY: 7.4, baseZ: -5.8, speed: 0.28, scale: 1.1, swaySpeed: 1.0, swayHeight: 0.2, swayPhase: 3.1 },
-      { id: 4, designType: 'twin_puff', startX: 10.5, baseY: 6.9, baseZ: -5.0, speed: 0.36, scale: 0.95, swaySpeed: 1.4, swayHeight: 0.16, swayPhase: 4.2 },
+      // High Altitude Layer (Drifting Right, deep in sky z = -7.5)
+      { id: 1, designType: 'cumulus', startX: -12.0, baseY: 8.4, baseZ: -7.5, speed: 0.28, scale: 1.15, swaySpeed: 1.0, swayHeight: 0.15, swayPhase: 0.5 },
+      { id: 2, designType: 'cotton_bank', startX: -2.0, baseY: 8.6, baseZ: -7.8, speed: 0.28, scale: 1.25, swaySpeed: 0.9, swayHeight: 0.12, swayPhase: 2.1 },
+      { id: 3, designType: 'stratus', startX: 8.0, baseY: 8.2, baseZ: -7.2, speed: 0.28, scale: 1.1, swaySpeed: 1.1, swayHeight: 0.16, swayPhase: 4.3 },
 
-      // Mid/Lower Altitude Drift Left (-speed) for organic multi-directional crossing
-      { id: 5, designType: 'cotton_bank', startX: 12.0, baseY: 5.6, baseZ: -4.6, speed: -0.26, scale: 0.92, swaySpeed: 1.1, swayHeight: 0.15, swayPhase: 0.9 },
-      { id: 6, designType: 'cumulus', startX: 5.2, baseY: 6.1, baseZ: -5.2, speed: -0.31, scale: 1.0, swaySpeed: 1.3, swayHeight: 0.19, swayPhase: 2.4 },
-      { id: 7, designType: 'stratus', startX: -1.8, baseY: 5.4, baseZ: -4.4, speed: -0.22, scale: 0.88, swaySpeed: 0.85, swayHeight: 0.13, swayPhase: 3.7 },
-      { id: 8, designType: 'twin_puff', startX: -8.6, baseY: 6.0, baseZ: -4.9, speed: -0.29, scale: 0.94, swaySpeed: 1.25, swayHeight: 0.17, swayPhase: 5.0 },
+      // Mid Altitude Layer (Drifting Left, mid-sky z = -5.5)
+      { id: 4, designType: 'twin_puff', startX: 13.0, baseY: 6.8, baseZ: -5.5, speed: -0.22, scale: 0.95, swaySpeed: 1.2, swayHeight: 0.14, swayPhase: 1.2 },
+      { id: 5, designType: 'cumulus', startX: 3.0, baseY: 6.9, baseZ: -5.8, speed: -0.22, scale: 1.0, swaySpeed: 1.3, swayHeight: 0.18, swayPhase: 3.0 },
+      { id: 6, designType: 'cotton_bank', startX: -7.0, baseY: 6.6, baseZ: -5.3, speed: -0.22, scale: 0.92, swaySpeed: 1.1, swayHeight: 0.15, swayPhase: 5.1 },
 
-      // Additional varied background layer clouds
-      { id: 9, designType: 'stratus', startX: -13.0, baseY: 6.6, baseZ: -6.5, speed: 0.19, scale: 1.2, swaySpeed: 0.8, swayHeight: 0.12, swayPhase: 1.1 },
-      { id: 10, designType: 'cumulus', startX: 8.0, baseY: 8.2, baseZ: -6.8, speed: -0.18, scale: 1.18, swaySpeed: 0.75, swayHeight: 0.14, swayPhase: 4.8 }
+      // Lower Background Accent Layer (Drifting Right, deep background z = -9.0)
+      { id: 7, designType: 'stratus', startX: -14.0, baseY: 5.4, baseZ: -9.0, speed: 0.18, scale: 1.3, swaySpeed: 0.8, swayHeight: 0.10, swayPhase: 0.8 },
+      { id: 8, designType: 'twin_puff', startX: 0.0, baseY: 5.6, baseZ: -8.8, speed: 0.18, scale: 1.1, swaySpeed: 0.85, swayHeight: 0.11, swayPhase: 3.6 }
     ];
   }, []);
 

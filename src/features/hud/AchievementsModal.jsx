@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import React, { memo, useEffect } from 'react';
 import { useTypingGameStore } from '../typing-game/useTypingGameStore.js';
 
 const BADGES = [
@@ -13,6 +13,17 @@ const BADGES = [
 export const AchievementsModal = memo(function AchievementsModal() {
   const state = useTypingGameStore();
   const { showBadgesModal, toggleBadgesModal } = state;
+
+  useEffect(() => {
+    if (!showBadgesModal) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        toggleBadgesModal();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showBadgesModal, toggleBadgesModal]);
 
   if (!showBadgesModal) return null;
 
