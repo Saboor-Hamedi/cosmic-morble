@@ -4,6 +4,7 @@ import { GameLayout } from './features/layout/GameLayout.jsx';
 import { useTypingGameStore } from './features/typing-game/useTypingGameStore.js';
 import { useThemeStore } from './features/theme/useThemeStore.js';
 import { UpdaterBadge } from './features/updater/UpdaterBadge.jsx';
+import { VersionBadge } from './features/hud/VersionBadge.jsx';
 
 function GlobalKeyboardListener() {
   const pressKey = useTypingGameStore((s) => s.pressKey);
@@ -53,6 +54,8 @@ function GlobalKeyboardListener() {
       if (e.metaKey || e.ctrlKey || e.altKey) return;
 
       // Intercept letters, space, or CapsLock right at the capture phase
+      if (e.repeat) return; // Fix bug: prevent key holding from bursting multiple balloons instantly
+      
       if (e.key === 'CapsLock' || (e.key && e.key.length === 1)) {
         pressKey(e.key);
       }
@@ -86,6 +89,7 @@ export default function App() {
       <GlobalKeyboardListener />
       <GameLayout />
       <UpdaterBadge />
+      <VersionBadge />
     </GameProvider>
   );
 }

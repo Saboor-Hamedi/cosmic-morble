@@ -2,6 +2,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('electronAPI', {
   minimize: () => ipcRenderer.send('window:minimize'),
+  maximize: () => ipcRenderer.send('window:maximize'),
   close: () => ipcRenderer.send('window:close'),
   platform: process.platform,
 
@@ -15,4 +16,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   },
   // Renderer calls this to trigger quit-and-install
   installUpdate: () => ipcRenderer.send('updater:install'),
+  // Renderer calls this to manually trigger an update check
+  checkForUpdates: () => ipcRenderer.send('updater:check'),
 });

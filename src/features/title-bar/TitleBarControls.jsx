@@ -1,5 +1,5 @@
-import React, { memo, useCallback } from 'react';
-import { Minus, X } from 'lucide-react';
+import React, { memo, useCallback, useState } from 'react';
+import { Minus, Square, X } from 'lucide-react';
 import { playHoverSound } from '../audio/SoundSynthesizer.js';
 
 export const TitleBarControls = memo(function TitleBarControls() {
@@ -7,6 +7,13 @@ export const TitleBarControls = memo(function TitleBarControls() {
     e.stopPropagation();
     if (window.electronAPI?.minimize) {
       window.electronAPI.minimize();
+    }
+  }, []);
+
+  const handleMaximize = useCallback((e) => {
+    e.stopPropagation();
+    if (window.electronAPI?.maximize) {
+      window.electronAPI.maximize();
     }
   }, []);
 
@@ -58,6 +65,37 @@ export const TitleBarControls = memo(function TitleBarControls() {
         title="Minimize"
       >
         <Minus size={15} style={{ WebkitAppRegion: 'no-drag', pointerEvents: 'none' }} />
+      </button>
+      <button
+        onClick={handleMaximize}
+        onMouseEnter={playHoverSound}
+        style={{
+          background: 'transparent',
+          border: 'none',
+          outline: 'none',
+          color: 'var(--text-dim)',
+          width: '32px',
+          height: '28px',
+          borderRadius: '4px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          transition: 'all 0.2s ease',
+          WebkitAppRegion: 'no-drag',
+          pointerEvents: 'auto'
+        }}
+        onMouseOver={(e) => {
+          e.currentTarget.style.color = '#ffffff';
+          e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.08)';
+        }}
+        onMouseOut={(e) => {
+          e.currentTarget.style.color = 'var(--text-dim)';
+          e.currentTarget.style.backgroundColor = 'transparent';
+        }}
+        title="Maximize"
+      >
+        <Square size={13} style={{ WebkitAppRegion: 'no-drag', pointerEvents: 'none' }} />
       </button>
       <button
         onClick={handleClose}

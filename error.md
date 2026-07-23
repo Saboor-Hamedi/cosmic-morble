@@ -1,69 +1,76 @@
-chunk-YCOEJRGR.js?v=0a0c7fbf:21551 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
-VM4 sandbox_bundle:2 Electron Security Warning (Insecure Content-Security-Policy) This renderer process has either no Content Security
-  Policy set or a policy with "unsafe-eval" enabled. This exposes users of
-  this app to unnecessary security risks.
+8:57:35 AM [vite] Pre-transform error: B:\electron\cosmic-morble\src\features\updater\UpdaterBadge.jsx: Adjacent JSX elements must be wrapped in an enclosing tag. Did you want a JSX fragment <>...</>? (245:4)
 
-For more information and help, consult
-https://electronjs.org/docs/tutorial/security.
-This warning will not show up
-once the app is packaged.
-warnAboutInsecureCSP @ VM4 sandbox_bundle:2
-4chunk-PJXIKWRK.js?v=0a0c7fbf:17705 The above error occurred in the <tspan> component:
+  243 |         )}
+  244 |       </div>
+> 245 |     </div>
+      |     ^
+  246 |   );
+  247 | }
+  248 |
+8:57:35 AM [vite] Internal server error: B:\electron\cosmic-morble\src\features\updater\UpdaterBadge.jsx: Adjacent JSX elements must be wrapped in an enclosing tag. Did you want a JSX fragment <>...</>? (245:4)
 
-    at tspan
-    at primitive
-    at http://localhost:5173/node_modules/.vite/deps/@react-three_drei.js?v=0a0c7fbf:87253:3
-    at group
-    at group
-    at BalloonItem2 (http://localhost:5173/src/features/typing-game/FloatingBalloons3D.jsx?t=1784720854501:23:67)
-    at group
-    at FloatingBalloons3D2 (http://localhost:5173/src/features/typing-game/FloatingBalloons3D.jsx?t=1784720854501:251:54)
-    at Suspense
-    at ErrorBoundary (http://localhost:5173/node_modules/.vite/deps/chunk-PJXIKWRK.js?v=0a0c7fbf:16028:5)
-    at FiberProvider (http://localhost:5173/node_modules/.vite/deps/chunk-PJXIKWRK.js?v=0a0c7fbf:17708:21)
-    at Provider (http://localhost:5173/node_modules/.vite/deps/chunk-PJXIKWRK.js?v=0a0c7fbf:17317:3)
-
-React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.
-console.error @ chunk-PJXIKWRK.js?v=0a0c7fbf:17705
-Show 1 more frame
-Show less
-2chunk-PJXIKWRK.js?v=0a0c7fbf:17814 Uncaught Error: R3F: Tspan is not part of the THREE namespace! Did you forget to extend? See: https://docs.pmnd.rs/react-three-fiber/api/objects#using-3rd-party-objects-declaratively
-    at createInstance (chunk-PJXIKWRK.js?v=0a0c7fbf:15743:15)
-    at completeWork (chunk-PJXIKWRK.js?v=0a0c7fbf:8414:34)
-    at completeUnitOfWork (chunk-PJXIKWRK.js?v=0a0c7fbf:13690:24)
-    at performUnitOfWork (chunk-PJXIKWRK.js?v=0a0c7fbf:13672:13)
-    at workLoopSync (chunk-PJXIKWRK.js?v=0a0c7fbf:13604:13)
-    at renderRootSync (chunk-PJXIKWRK.js?v=0a0c7fbf:13583:15)
-    at recoverFromConcurrentError (chunk-PJXIKWRK.js?v=0a0c7fbf:13173:28)
-    at performSyncWorkOnRoot (chunk-PJXIKWRK.js?v=0a0c7fbf:13316:28)
-    at flushSyncCallbacks (chunk-PJXIKWRK.js?v=0a0c7fbf:2766:30)
-    at workLoop (chunk-PJXIKWRK.js?v=0a0c7fbf:274:42)
-chunk-PJXIKWRK.js?v=0a0c7fbf:17705 The above error occurred in the <ForwardRef(Canvas)> component:
-
-    at Canvas (http://localhost:5173/node_modules/.vite/deps/chunk-PJXIKWRK.js?v=0a0c7fbf:17774:3)
-    at FiberProvider (http://localhost:5173/node_modules/.vite/deps/chunk-PJXIKWRK.js?v=0a0c7fbf:17708:21)
-    at CanvasWrapper
-    at div
-    at SceneContainer2
-    at div
-    at GameLayout2
-    at GameProvider (http://localhost:5173/src/features/game-state/GameContext.jsx:22:32)
-    at App
-
-Consider adding an error boundary to your tree to customize error handling behavior.
-Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
-console.error @ chunk-PJXIKWRK.js?v=0a0c7fbf:17705
-Show 1 more frame
-Show less
-chunk-YCOEJRGR.js?v=0a0c7fbf:19413 Uncaught Error: R3F: Tspan is not part of the THREE namespace! Did you forget to extend? See: https://docs.pmnd.rs/react-three-fiber/api/objects#using-3rd-party-objects-declaratively
-    at createInstance (chunk-PJXIKWRK.js?v=0a0c7fbf:15743:15)
-    at completeWork (chunk-PJXIKWRK.js?v=0a0c7fbf:8414:34)
-    at completeUnitOfWork (chunk-PJXIKWRK.js?v=0a0c7fbf:13690:24)
-    at performUnitOfWork (chunk-PJXIKWRK.js?v=0a0c7fbf:13672:13)
-    at workLoopSync (chunk-PJXIKWRK.js?v=0a0c7fbf:13604:13)
-    at renderRootSync (chunk-PJXIKWRK.js?v=0a0c7fbf:13583:15)
-    at recoverFromConcurrentError (chunk-PJXIKWRK.js?v=0a0c7fbf:13173:28)
-    at performSyncWorkOnRoot (chunk-PJXIKWRK.js?v=0a0c7fbf:13316:28)
-    at flushSyncCallbacks (chunk-PJXIKWRK.js?v=0a0c7fbf:2766:30)
-    at workLoop (chunk-PJXIKWRK.js?v=0a0c7fbf:274:42)
-chunk-FKPCETFF.js?v=0a0c7fbf:17472 THREE.WebGLRenderer: Context Lost.
+  243 |         )}
+  244 |       </div>
+> 245 |     </div>
+      |     ^
+  246 |   );
+  247 | }
+  248 |
+  Plugin: vite:react-babel
+  File: B:/electron/cosmic-morble/src/features/updater/UpdaterBadge.jsx:245:4
+  243|          )}
+  244|        </div>
+  245|      </div>
+     |      ^
+  246|    );
+  247|  }
+      at constructor (B:\electron\cosmic-morble\node_modules\@babel\parser\lib\index.js:365:19)
+      at JSXParserMixin.raise (B:\electron\cosmic-morble\node_modules\@babel\parser\lib\index.js:6616:19)
+      at JSXParserMixin.jsxParseElementAt (B:\electron\cosmic-morble\node_modules\@babel\parser\lib\index.js:4754:18)
+      at JSXParserMixin.jsxParseElement (B:\electron\cosmic-morble\node_modules\@babel\parser\lib\index.js:4761:17)
+      at JSXParserMixin.parseExprAtom (B:\electron\cosmic-morble\node_modules\@babel\parser\lib\index.js:4771:19)
+      at JSXParserMixin.parseExprSubscripts (B:\electron\cosmic-morble\node_modules\@babel\parser\lib\index.js:11098:23)
+      at JSXParserMixin.parseUpdate (B:\electron\cosmic-morble\node_modules\@babel\parser\lib\index.js:11083:21)
+      at JSXParserMixin.parseMaybeUnary (B:\electron\cosmic-morble\node_modules\@babel\parser\lib\index.js:11063:23)
+      at JSXParserMixin.parseMaybeUnaryOrPrivate (B:\electron\cosmic-morble\node_modules\@babel\parser\lib\index.js:10916:61)
+      at JSXParserMixin.parseExprOps (B:\electron\cosmic-morble\node_modules\@babel\parser\lib\index.js:10921:23)
+      at JSXParserMixin.parseMaybeConditional (B:\electron\cosmic-morble\node_modules\@babel\parser\lib\index.js:10898:23)
+      at JSXParserMixin.parseMaybeAssign (B:\electron\cosmic-morble\node_modules\@babel\parser\lib\index.js:10848:21)
+      at JSXParserMixin.parseExpressionBase (B:\electron\cosmic-morble\node_modules\@babel\parser\lib\index.js:10801:23)
+      at B:\electron\cosmic-morble\node_modules\@babel\parser\lib\index.js:10797:39
+      at JSXParserMixin.allowInAnd (B:\electron\cosmic-morble\node_modules\@babel\parser\lib\index.js:12438:16)
+      at JSXParserMixin.parseExpression (B:\electron\cosmic-morble\node_modules\@babel\parser\lib\index.js:10797:17)
+      at JSXParserMixin.parseStatementContent (B:\electron\cosmic-morble\node_modules\@babel\parser\lib\index.js:12912:23)
+      at JSXParserMixin.parseStatementLike (B:\electron\cosmic-morble\node_modules\@babel\parser\lib\index.js:12784:17)
+      at JSXParserMixin.parseStatementListItem (B:\electron\cosmic-morble\node_modules\@babel\parser\lib\index.js:12764:17)
+      at JSXParserMixin.parseBlockOrModuleBlockBody (B:\electron\cosmic-morble\node_modules\@babel\parser\lib\index.js:13333:61)
+      at JSXParserMixin.parseBlockBody (B:\electron\cosmic-morble\node_modules\@babel\parser\lib\index.js:13326:10)
+      at JSXParserMixin.parseBlock (B:\electron\cosmic-morble\node_modules\@babel\parser\lib\index.js:13314:10)
+      at JSXParserMixin.parseFunctionBody (B:\electron\cosmic-morble\node_modules\@babel\parser\lib\index.js:12117:24)
+      at JSXParserMixin.parseFunctionBodyAndFinish (B:\electron\cosmic-morble\node_modules\@babel\parser\lib\index.js:12103:10)
+      at B:\electron\cosmic-morble\node_modules\@babel\parser\lib\index.js:13462:12
+      at JSXParserMixin.withSmartMixTopicForbiddingContext (B:\electron\cosmic-morble\node_modules\@babel\parser\lib\index.js:12420:14)
+      at JSXParserMixin.parseFunction (B:\electron\cosmic-morble\node_modules\@babel\parser\lib\index.js:13461:10)
+      at JSXParserMixin.parseFunctionStatement (B:\electron\cosmic-morble\node_modules\@babel\parser\lib\index.js:13142:17)
+      at JSXParserMixin.parseStatementContent (B:\electron\cosmic-morble\node_modules\@babel\parser\lib\index.js:12808:21)
+      at JSXParserMixin.parseStatementLike (B:\electron\cosmic-morble\node_modules\@babel\parser\lib\index.js:12784:17)
+      at JSXParserMixin.parseStatementListItem (B:\electron\cosmic-morble\node_modules\@babel\parser\lib\index.js:12764:17)
+      at JSXParserMixin.parseExportDeclaration (B:\electron\cosmic-morble\node_modules\@babel\parser\lib\index.js:13951:17)
+      at JSXParserMixin.maybeParseExportDeclaration (B:\electron\cosmic-morble\node_modules\@babel\parser\lib\index.js:13910:31)
+      at JSXParserMixin.parseExport (B:\electron\cosmic-morble\node_modules\@babel\parser\lib\index.js:13829:29)
+      at JSXParserMixin.parseStatementContent (B:\electron\cosmic-morble\node_modules\@babel\parser\lib\index.js:12895:27)
+      at JSXParserMixin.parseStatementLike (B:\electron\cosmic-morble\node_modules\@babel\parser\lib\index.js:12784:17)
+      at JSXParserMixin.parseModuleItem (B:\electron\cosmic-morble\node_modules\@babel\parser\lib\index.js:12761:17)
+      at JSXParserMixin.parseBlockOrModuleBlockBody (B:\electron\cosmic-morble\node_modules\@babel\parser\lib\index.js:13333:36)
+      at JSXParserMixin.parseBlockBody (B:\electron\cosmic-morble\node_modules\@babel\parser\lib\index.js:13326:10)
+      at JSXParserMixin.parseProgram (B:\electron\cosmic-morble\node_modules\@babel\parser\lib\index.js:12639:10)
+      at JSXParserMixin.parseTopLevel (B:\electron\cosmic-morble\node_modules\@babel\parser\lib\index.js:12629:25)
+      at JSXParserMixin.parse (B:\electron\cosmic-morble\node_modules\@babel\parser\lib\index.js:14505:25)
+      at parse (B:\electron\cosmic-morble\node_modules\@babel\parser\lib\index.js:14539:38)
+      at parser (B:\electron\cosmic-morble\node_modules\@babel\core\lib\parser\index.js:41:34)
+      at parser.next (<anonymous>)
+      at normalizeFile (B:\electron\cosmic-morble\node_modules\@babel\core\lib\transformation\normalize-file.js:51:37)
+      at normalizeFile.next (<anonymous>)
+      at run (B:\electron\cosmic-morble\node_modules\@babel\core\lib\transformation\index.js:22:50)
+      at run.next (<anonymous>)
+      at transform (B:\electron\cosmic-morble\node_modules\@babel\core\lib\transform.js:22:33)

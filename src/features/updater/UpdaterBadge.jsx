@@ -16,7 +16,9 @@ const STYLES = {
   pill: {
     display: 'flex',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: '8px',
+    minWidth: '130px',
     background: 'rgba(0, 0, 0, 0.42)',
     backdropFilter: 'blur(14px)',
     WebkitBackdropFilter: 'blur(14px)',
@@ -114,7 +116,18 @@ export function UpdaterBadge() {
     if (!api?.onUpdaterEvent) return;
 
     const cleanup = api.onUpdaterEvent((data) => {
+      console.log('Updater Event:', data); // Log to DevTools if available
       switch (data.event) {
+        case 'checking':
+          setPhase('checking');
+          break;
+        case 'not-available':
+          setPhase('up-to-date');
+          setTimeout(() => {
+            // Only revert if we haven't clicked checking again
+            setPhase(p => p === 'up-to-date' ? 'idle' : p);
+          }, 3000);
+          break;
         case 'available':
           setVersion(data.version || '');
           setPhase('available');
@@ -131,8 +144,11 @@ export function UpdaterBadge() {
           setVisible(true);
           break;
         case 'error':
-          // Silently hide on error — don't alarm the user
-          setVisible(false);
+          // Show error temporarily so we can debug why it failed
+          setVersion(data.message || 'Error');
+          setPhase('error');
+          setVisible(true);
+          setTimeout(() => setVisible(false), 8000); // hide after 8s
           break;
         default:
           break;
@@ -143,15 +159,18 @@ export function UpdaterBadge() {
     return () => { if (cleanupRef.current) cleanupRef.current(); };
   }, []);
 
-  if (!visible || phase === 'idle') return null;
+  // Hide completely unless we actively found an update or hit a critical error
+  if (!visible || phase === 'idle' || phase === 'checking' || phase === 'up-to-date') return null;
 
   const handleClick = () => {
     if (phase === 'ready') {
       window.electronAPI?.installUpdate();
+    } else if (phase === 'idle' || phase === 'error' || phase === 'available') {
+      window.electronAPI?.checkForUpdates();
     }
   };
 
-  const isClickable = phase === 'ready';
+  const isClickable = phase === 'ready' || phase === 'idle' || phase === 'error' || phase === 'available';
 
   return (
     <div style={STYLES.wrapper}>
@@ -159,21 +178,44 @@ export function UpdaterBadge() {
         style={{
           ...STYLES.pill,
           ...(isClickable ? STYLES.pillClickable : {}),
-          animation: 'updater-fadein 0.35s ease forwards',
-          borderColor: phase === 'ready'
-            ? 'rgba(34, 197, 94, 0.35)'
-            : 'rgba(255, 255, 255, 0.10)',
+          animation: isClickable 
+            ? 'updater-fadein 0.35s ease forwards, button-pulse 2s infinite' 
+            : 'updater-fadein 0.35s ease forwards',
+          background: phase === 'ready' 
+            ? 'linear-gradient(145deg, rgba(34,197,94,0.3), rgba(21,128,61,0.6))'
+            : 'linear-gradient(145deg, rgba(255,255,255,0.1), rgba(0,0,0,0.5))',
+          borderTop: '2px solid rgba(255, 255, 255, 0.4)',
+          borderBottom: '2px solid rgba(0, 0, 0, 0.6)',
+          borderColor: phase === 'ready' ? 'rgba(74, 222, 128, 0.5)' : 'rgba(255, 255, 255, 0.2)',
+          boxShadow: phase === 'ready'
+            ? '0 10px 25px rgba(21,128,61,0.5), inset 0 2px 4px rgba(255,255,255,0.3), inset 0 -3px 6px rgba(0,0,0,0.5)'
+            : '0 8px 20px rgba(0,0,0,0.4), inset 0 2px 4px rgba(255,255,255,0.2), inset 0 -3px 6px rgba(0,0,0,0.5)',
+          transformStyle: 'preserve-3d',
         }}
         onClick={handleClick}
         onMouseEnter={e => {
           if (isClickable) {
-            e.currentTarget.style.background = 'rgba(34, 197, 94, 0.18)';
-            e.currentTarget.style.color = 'rgba(255,255,255,0.95)';
+            e.currentTarget.style.transform = 'translateY(-2px) scale(1.02)';
+            e.currentTarget.style.boxShadow = '0 15px 30px rgba(21,128,61,0.6), inset 0 2px 4px rgba(255,255,255,0.4), inset 0 -3px 6px rgba(0,0,0,0.5)';
           }
         }}
         onMouseLeave={e => {
-          e.currentTarget.style.background = 'rgba(0,0,0,0.42)';
-          e.currentTarget.style.color = 'rgba(255,255,255,0.75)';
+          if (isClickable) {
+            e.currentTarget.style.transform = 'translateY(0) scale(1)';
+            e.currentTarget.style.boxShadow = '0 10px 25px rgba(21,128,61,0.5), inset 0 2px 4px rgba(255,255,255,0.3), inset 0 -3px 6px rgba(0,0,0,0.5)';
+          }
+        }}
+        onMouseDown={e => {
+          if (isClickable) {
+            e.currentTarget.style.transform = 'translateY(2px) scale(0.98)';
+            e.currentTarget.style.boxShadow = '0 4px 10px rgba(21,128,61,0.4), inset 0 4px 8px rgba(0,0,0,0.6)';
+          }
+        }}
+        onMouseUp={e => {
+          if (isClickable) {
+            e.currentTarget.style.transform = 'translateY(-2px) scale(1.02)';
+            e.currentTarget.style.boxShadow = '0 15px 30px rgba(21,128,61,0.6), inset 0 2px 4px rgba(255,255,255,0.4), inset 0 -3px 6px rgba(0,0,0,0.5)';
+          }
         }}
         title={
           phase === 'available' ? `Version ${version} is downloading…` :
@@ -181,24 +223,45 @@ export function UpdaterBadge() {
           phase === 'ready' ? `v${version} is ready — click to restart` : ''
         }
       >
-        {phase === 'available' && (
+        {(phase === 'idle' || phase === 'available') && (
           <>
             <PulseDot color="#38bdf8" />
-            <span>Update available{version ? ` · v${version}` : ''}</span>
+            <span style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Update</span>
+          </>
+        )}
+
+        {phase === 'checking' && (
+          <>
+            <ProgressRing percent={0} />
+            <span style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Checking...</span>
+          </>
+        )}
+
+        {phase === 'up-to-date' && (
+          <>
+            <PulseDot color="#94a3b8" />
+            <span style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Up to date</span>
           </>
         )}
 
         {phase === 'downloading' && (
           <>
             <ProgressRing percent={percent} />
-            <span>{percent}%</span>
+            <span style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Downloading..</span>
           </>
         )}
 
         {phase === 'ready' && (
           <>
-            <PulseDot color="#22c55e" />
-            <span>Restart to apply{version ? ` v${version}` : ''}</span>
+            <PulseDot color="#4ade80" />
+            <span style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Restart</span>
+          </>
+        )}
+
+        {phase === 'error' && (
+          <>
+            <PulseDot color="#ef4444" />
+            <span style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Error</span>
           </>
         )}
       </div>

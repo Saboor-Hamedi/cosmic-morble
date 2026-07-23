@@ -80,12 +80,16 @@ const OrganicFloatingCloud = React.memo(function OrganicFloatingCloud({ cloud })
           ) : (
             <cylinderGeometry args={puff.args} />
           )}
-          <meshStandardMaterial
+          <meshPhysicalMaterial
             color="#ffffff"
-            roughness={0.92}
-            metalness={0.04}
-            emissive="#f8fafc"
-            emissiveIntensity={0.06}
+            roughness={1.0}
+            transmission={0.4}
+            thickness={1.5}
+            transparent={true}
+            opacity={0.95}
+            depthWrite={false}
+            emissive="#f1f5f9"
+            emissiveIntensity={0.15}
           />
         </mesh>
       ))}

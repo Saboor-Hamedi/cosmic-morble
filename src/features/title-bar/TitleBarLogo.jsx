@@ -12,7 +12,7 @@ export const TitleBarLogo = memo(function TitleBarLogo() {
           color: '#ffffff',
           textShadow: '0 0 10px rgba(0, 240, 255, 0.8)'
         }}>
-          🎈 3D BALLOON TYPING ADVENTURE FOR KIDS
+          🎈 3D BALLOON TYPING ADVENTURE
         </span>
       </div>
     </div>

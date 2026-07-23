@@ -55,16 +55,19 @@ const BackgroundWaterBubbleItem = React.memo(function BackgroundWaterBubbleItem(
         <sphereGeometry args={[bubble.radius, 48, 48]} />
         <meshPhysicalMaterial
           color={bubbleColor}
-          transmission={0.96}
-          ior={1.333}
-          roughness={0.02}
-          metalness={0.0}
-          thickness={bubble.radius * 2.2}
+          transmission={0.98}
+          ior={1.2}
+          roughness={0.05}
+          metalness={0.1}
+          thickness={bubble.radius * 3.0}
           clearcoat={1.0}
-          clearcoatRoughness={0.01}
-          reflectivity={0.9}
+          clearcoatRoughness={0.05}
+          reflectivity={1.0}
+          iridescence={1.0}
+          iridescenceIOR={1.3}
+          iridescenceThicknessRange={[100, 400]}
           transparent
-          opacity={0.82}
+          opacity={0.9}
           depthWrite={false}
           onBeforeCompile={(shader) => {
             shader.uniforms.uTime = { value: 0 };

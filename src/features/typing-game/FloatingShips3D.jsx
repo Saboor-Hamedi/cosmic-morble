@@ -24,8 +24,9 @@ const FloatingWaterOrbItem = React.memo(function FloatingWaterOrbItem({ balloon:
   const letterRef = useRef();
   const bubblesGroupRef = useRef();
   const bubbleRefs = useRef([]);
+  const targetArrowRef = useRef();
   
-  const { mode, capsLock } = useTypingGameStore();
+  const { mode, capsLock, activeTargetId } = useTypingGameStore();
   const theme = useThemeStore((s) => s.theme);
 
   const [hovered, setHovered] = useState(false);
@@ -106,6 +107,12 @@ const FloatingWaterOrbItem = React.memo(function FloatingWaterOrbItem({ balloon:
         mesh.position.y = newY;
       }
     });
+
+    // Bounce and spin the focus target arrow
+    if (targetArrowRef.current) {
+      targetArrowRef.current.position.y = (item.shapeType === 'word_capsule' ? 0.95 : 1.15) + Math.sin(t * 6.0) * 0.08;
+      targetArrowRef.current.rotation.y = t * 3.0;
+    }
   });
 
   const displayText = capsLock ? item.text.toUpperCase() : item.text.toLowerCase();
@@ -237,6 +244,23 @@ const FloatingWaterOrbItem = React.memo(function FloatingWaterOrbItem({ balloon:
         ))}
       </group>
 
+      {/* 5.5 Focus Target Indicator (Bouncing 3D Crystal) for Words Mode */}
+      {mode === 'words' && activeTargetId === item.id && (
+        <group ref={targetArrowRef} position={[0, 1.1, 0]} renderOrder={15}>
+          <mesh rotation={[Math.PI, 0, 0]} castShadow={false}>
+            <coneGeometry args={[0.15, 0.28, 4]} />
+            <meshStandardMaterial 
+              color="#ff3366" 
+              roughness={0.2} 
+              metalness={0.6} 
+              emissive="#ff3366" 
+              emissiveIntensity={0.6} 
+              depthWrite={false} 
+            />
+          </mesh>
+        </group>
+      )}
+
       {/* 6. Fun, Playful Candy/Jewel Letters inside (`outlineColor="#ffffff"` eliminates all black shadows inside the shape!) */}
       <group ref={letterRef} position={[0, 0, 0]} renderOrder={10}>
         {mode === 'letters' ? (
@@ -260,7 +284,8 @@ const FloatingWaterOrbItem = React.memo(function FloatingWaterOrbItem({ balloon:
           <group position={[0, 0, 0]}>
             {(() => {
               const len = Math.max(1, displayText.length);
-              const wordFontSize = Math.min(0.82, 2.4 / Math.max(2.2, len));
+              // Make words slightly smaller so they fit better in the capsule
+              const wordFontSize = Math.min(0.72, 2.0 / Math.max(2.2, len));
               const charWidth = wordFontSize * 0.78;
               return displayText.split('').map((char, idx) => {
                 const isTyped = idx < item.typedIndex;

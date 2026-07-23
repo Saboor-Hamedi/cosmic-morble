@@ -144,6 +144,7 @@ export const useTypingGameStore = create((set, get) => ({
   bursts: [],
   activeKey: null,
   activeKeyTime: 0,
+  activeTargetId: null, // Tracks the currently focused balloon in words mode
 
   togglePaused: () => {
     set((state) => ({ isPaused: !state.isPaused }));
@@ -176,11 +177,13 @@ export const useTypingGameStore = create((set, get) => ({
     }
   },
 
-  setMode: (newMode) => {
+  setMode: (mode) => {
     set({
-      mode: newMode,
+      mode,
+      score: 0,
+      streak: 0,
       balloons: [],
-      streak: 0
+      activeTargetId: null
     });
   },
 
@@ -387,7 +390,7 @@ export const useTypingGameStore = create((set, get) => ({
       basePoints *= 2;
     }
 
-    const newScore = state.score + basePoints;
+    let newScore = state.score + basePoints;
     const newStreak = state.streak + 1;
     const newMaxCombo = Math.max(state.maxCombo, newStreak);
     const newWordsTyped = state.totalWordsTyped + (state.mode === 'words' ? 1 : 0);
@@ -423,28 +426,10 @@ export const useTypingGameStore = create((set, get) => ({
     let remainingBalloons = state.balloons.filter((b) => b.id !== id);
     let extraBursts = [newBurst];
 
-    // If Starburst superpower triggered, automatically pop up to 3 nearby bubbles!
+    // If Starburst superpower triggered, we used to pop nearby bubbles, but this confused users who thought it was a bug where typing a single letter cleared the screen!
+    // We will just grant extra score or play a big sound instead, leaving the other balloons alone.
     if (target.powerUpType === 'starburst') {
-      const nearby = remainingBalloons
-        .sort((a, b) => {
-          const dA = Math.hypot(a.position[0] - target.position[0], a.position[1] - target.position[1]);
-          const dB = Math.hypot(b.position[0] - target.position[0], b.position[1] - target.position[1]);
-          return dA - dB;
-        })
-        .slice(0, 3);
-
-      nearby.forEach((nb) => {
-        extraBursts.push({
-          id: nextBurstId++,
-          position: [...nb.position],
-          color: nb.color,
-          text: nb.text,
-          timestamp: Date.now()
-        });
-      });
-
-      const nearbyIds = new Set(nearby.map((nb) => nb.id));
-      remainingBalloons = remainingBalloons.filter((b) => !nearbyIds.has(b.id));
+      newScore += 50; // Bonus points for starburst instead of popping everything!
     }
 
     set({
@@ -471,13 +456,31 @@ export const useTypingGameStore = create((set, get) => ({
       return;
     }
 
+    if (keyChar === 'Backspace' || keyChar === 'Escape') {
+      if (state.mode === 'words' && state.activeTargetId) {
+        set({
+          activeTargetId: null,
+          balloons: state.balloons.map((b) => b.id === state.activeTargetId ? { ...b, typedIndex: 0 } : b)
+        });
+      }
+      return;
+    }
+
     if (keyChar.length !== 1) return;
     const char = keyChar.toUpperCase();
+
+    // Prevent hardware chatter / gaming keyboard macros from firing the same key multiple times instantly!
+    const now = Date.now();
+    if (state.activeKey === char && now - state.activeKeyTime < 60) {
+      return; // Ignore if the exact same key was pressed less than 60ms ago
+    }
 
     state.setActiveKey(keyChar);
     playKeyClickSound(char);
 
-    const sorted = [...state.balloons].sort((a, b) => a.position[1] - b.position[1]);
+    // Prioritize the HIGHEST balloon on the screen (the one closest to escaping)
+    // This fixes the bug where users type a letter to pop a high balloon, but a newly spawned identical letter at the bottom pops instead, making them think their keystroke was ignored!
+    const sorted = [...state.balloons].sort((a, b) => b.position[1] - a.position[1]);
 
     if (state.mode === 'letters') {
       const match = sorted.find((b) => b.text.toUpperCase() === char);
@@ -485,20 +488,44 @@ export const useTypingGameStore = create((set, get) => ({
         state.burstBalloonById(match.id);
       }
     } else {
-      const match = sorted.find((b) => b.text[b.typedIndex] && b.text[b.typedIndex].toUpperCase() === char);
-      if (match) {
-        const nextIdx = match.typedIndex + 1;
-        if (nextIdx >= match.text.length) {
-          state.burstBalloonById(match.id);
+      let currentTargetId = state.activeTargetId;
+      let targetBalloon = null;
+
+      if (currentTargetId) {
+        targetBalloon = sorted.find((b) => b.id === currentTargetId);
+        if (!targetBalloon) {
+          currentTargetId = null;
+          set({ activeTargetId: null });
+        }
+      }
+
+      // If no target, find a new one
+      if (!targetBalloon) {
+        targetBalloon = sorted.find((b) => b.text[0] && b.text[0].toUpperCase() === char);
+        if (targetBalloon) {
+          currentTargetId = targetBalloon.id;
+          set({ activeTargetId: currentTargetId });
+        }
+      }
+
+      if (targetBalloon) {
+        if (targetBalloon.text[targetBalloon.typedIndex] && targetBalloon.text[targetBalloon.typedIndex].toUpperCase() === char) {
+          const nextIdx = targetBalloon.typedIndex + 1;
+          if (nextIdx >= targetBalloon.text.length) {
+            state.burstBalloonById(targetBalloon.id);
+            set({ activeTargetId: null });
+          } else {
+            playKeyClickSound(char);
+            set({
+              balloons: state.balloons.map((b) =>
+                b.id === targetBalloon.id ? { ...b, typedIndex: nextIdx } : b
+              ),
+              score: state.score + 10,
+              streak: state.streak + 1
+            });
+          }
         } else {
-          playKeyClickSound(char);
-          set({
-            balloons: state.balloons.map((b) =>
-              b.id === match.id ? { ...b, typedIndex: nextIdx } : b
-            ),
-            score: state.score + 10,
-            streak: state.streak + 1
-          });
+           // Wrong letter! Just ignore for now so we don't punish them too harshly.
         }
       }
     }

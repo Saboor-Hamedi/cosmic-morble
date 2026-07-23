@@ -28,21 +28,39 @@ function sendUpdaterStatus(event, data = {}) {
 
 // ─── Configure autoUpdater ─────────────────────────────────────────────────
 function setupAutoUpdater() {
-  // Silent in dev — only active in packaged builds
-  if (VITE_DEV_SERVER_URL) return;
+  // Allow testing updater in dev by forcing the dev config
+  autoUpdater.forceDevUpdateConfig = true;
 
-  autoUpdater.autoDownload = true;          // download silently in background
-  autoUpdater.autoInstallOnAppQuit = false; // we control the install via IPC
+  // 1) Setup basic file logger so we can debug exactly why updates fail
+  const logFile = path.join(app.getPath('userData'), 'updater-debug.log');
+  const log = (msg) => {
+    try { fs.appendFileSync(logFile, `[${new Date().toISOString()}] ${msg}\n`); } catch (_) {}
+  };
+  
+  autoUpdater.logger = {
+    info: (m) => log('INFO: ' + m),
+    warn: (m) => log('WARN: ' + m),
+    error: (m) => log('ERROR: ' + m),
+    debug: (m) => log('DEBUG: ' + m),
+  };
+
+  log('Starting autoUpdater setup. App version: ' + app.getVersion());
+
+  autoUpdater.autoDownload = true;
+  autoUpdater.autoInstallOnAppQuit = false;
 
   autoUpdater.on('checking-for-update', () => {
+    log('Checking for update...');
     sendUpdaterStatus('checking');
   });
 
   autoUpdater.on('update-available', (info) => {
+    log('Update available: ' + info.version);
     sendUpdaterStatus('available', { version: info.version, releaseNotes: info.releaseNotes });
   });
 
   autoUpdater.on('update-not-available', () => {
+    log('Update not available.');
     sendUpdaterStatus('not-available');
   });
 
@@ -56,16 +74,22 @@ function setupAutoUpdater() {
   });
 
   autoUpdater.on('update-downloaded', (info) => {
+    log('Update downloaded: ' + info.version);
     sendUpdaterStatus('downloaded', { version: info.version });
   });
 
   autoUpdater.on('error', (err) => {
+    log('Updater error: ' + (err?.message || err));
     sendUpdaterStatus('error', { message: err?.message || 'Unknown updater error' });
   });
 
   // Check 4 seconds after launch so the window is fully ready
   setTimeout(() => {
-    autoUpdater.checkForUpdates().catch(() => {/* silent fail in case no internet */});
+    log('Calling checkForUpdates()...');
+    autoUpdater.checkForUpdates().catch((err) => {
+      log('checkForUpdates() threw error: ' + err?.message);
+      sendUpdaterStatus('error', { message: 'Check fail: ' + (err?.message || 'unknown') });
+    });
   }, 4000);
 }
 
@@ -115,13 +139,31 @@ app.whenReady().then(() => {
     if (win) win.minimize();
   });
 
+  ipcMain.on('window:maximize', () => {
+    if (win) {
+      if (win.isMaximized()) {
+        win.unmaximize();
+      } else {
+        win.maximize();
+      }
+    }
+  });
+
   ipcMain.on('window:close', () => {
     if (win) win.close();
   });
 
   // ── Updater IPC: renderer triggers install + quit ─────────────────────────
   ipcMain.on('updater:install', () => {
-    autoUpdater.quitAndInstall(false, true); // isSilent=false, isForceRunAfter=true
+    autoUpdater.quitAndInstall(true, true); // isSilent=true, isForceRunAfter=true
+  });
+
+  ipcMain.on('updater:check', () => {
+    autoUpdater.checkForUpdates().catch((err) => {
+      if (win && !win.isDestroyed()) {
+        win.webContents.send('updater:status', { event: 'error', message: 'Check fail: ' + (err?.message || 'unknown') });
+      }
+    });
   });
 
   createWindow();
