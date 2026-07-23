@@ -61,10 +61,22 @@ const FloatingWaterOrbItem = React.memo(function FloatingWaterOrbItem({ balloon:
       item.position[2] + swayZ
     );
 
+    // Smooth spawning scale animation (Pop-in over 500ms)
+    let spawnScale = 1.0;
+    if (item.spawnTime) {
+      const elapsedSinceSpawn = (Date.now() - item.spawnTime) / 1000;
+      // Use an elastic/ease-out spring feel for the pop-in (if under 0.5s)
+      if (elapsedSinceSpawn < 0.5) {
+        const p = elapsedSinceSpawn / 0.5;
+        // Simple easeOutQuad
+        spawnScale = p * (2 - p);
+      }
+    }
+
     // Strictly round scale (`100% equal width and height at all times`, NO oval squishing or eggs!)
     const baseScale = (item.scale || 0.45) * 2.3;
     const hoverScaleBonus = hovered ? 1.08 : 1.0;
-    const strictRoundScale = baseScale * hoverScaleBonus;
+    const strictRoundScale = baseScale * hoverScaleBonus * spawnScale;
     outerGroupRef.current.scale.set(strictRoundScale, strictRoundScale, strictRoundScale);
 
     // Outer water sphere shimmer & custom fluid water ripple shader updates
@@ -125,6 +137,17 @@ const FloatingWaterOrbItem = React.memo(function FloatingWaterOrbItem({ balloon:
 
   const orbColor = item.color || theme.bubbleColor || '#38bdf8';
 
+  const renderGeometry = (radius, detail) => {
+    switch (item.geometryShape) {
+      case 'torus': return <torusGeometry args={[radius * 0.75, radius * 0.35, 32, detail]} />;
+      case 'icosahedron': return <icosahedronGeometry args={[radius, 6]} />; // Subdivided enough for ripples
+      case 'capsule': return <capsuleGeometry args={[radius * 0.7, radius * 0.8, 32, detail]} />;
+      case 'cylinder': return <cylinderGeometry args={[radius * 0.75, radius * 0.75, radius * 1.5, detail]} />;
+      case 'sphere':
+      default: return <sphereGeometry args={[radius, detail, detail]} />;
+    }
+  };
+
   return (
     <group
       ref={outerGroupRef}
@@ -135,7 +158,7 @@ const FloatingWaterOrbItem = React.memo(function FloatingWaterOrbItem({ balloon:
     >
       {/* 1. Very faint outer glow halo — barely visible, just a whisper of color */}
       <mesh renderOrder={0} castShadow={false} receiveShadow={false}>
-        <sphereGeometry args={[0.76, 32, 32]} />
+        {renderGeometry(0.76, 32)}
         <meshStandardMaterial
           color={item.powerUpType === 'rainbow' ? '#cc44cc' : item.powerUpType === 'freeze' ? '#00ccee' : item.powerUpType === 'starburst' ? '#ddaa00' : orbColor}
           emissive={orbColor}
@@ -148,7 +171,7 @@ const FloatingWaterOrbItem = React.memo(function FloatingWaterOrbItem({ balloon:
 
       {/* 2. Fluid Liquid Water Drop (`onBeforeCompile` custom vertex shader creates organic surface water ripples with NO black shadows, NO external ring) */}
       <mesh ref={orbMeshRef} renderOrder={1} castShadow={false} receiveShadow={false}>
-        <sphereGeometry args={[0.72, 64, 64]} />
+        {renderGeometry(0.72, 64)}
         <meshPhysicalMaterial
           color={orbColor}
           roughness={0.04}

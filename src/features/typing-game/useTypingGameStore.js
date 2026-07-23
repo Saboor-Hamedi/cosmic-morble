@@ -229,6 +229,10 @@ export const useTypingGameStore = create((set, get) => ({
     let text = '';
     if (state.mode === 'letters') {
       text = SINGLE_LETTERS[Math.floor(Math.random() * SINGLE_LETTERS.length)];
+      // After ~50 letters (score > 1000), 40% chance to spawn 2 letters for a fun challenge!
+      if (state.score > 1000 && Math.random() > 0.6) {
+        text += SINGLE_LETTERS[Math.floor(Math.random() * SINGLE_LETTERS.length)];
+      }
     } else {
       text = KIDS_WORDS[Math.floor(Math.random() * KIDS_WORDS.length)];
     }
@@ -251,11 +255,13 @@ export const useTypingGameStore = create((set, get) => ({
     const swaySpeed = 1.6 + Math.random() * 0.8;
     const swayAmount = 0.18 + Math.random() * 0.14;
     const swayPhase = Math.random() * Math.PI * 2;
+    const FUN_GEOMETRIES = ['sphere', 'torus', 'icosahedron', 'capsule', 'cylinder'];
 
     const newBalloon = {
       id: nextBalloonId++,
       text,
       shapeType: state.mode === 'words' ? 'word_capsule' : 'sphere',
+      geometryShape: FUN_GEOMETRIES[Math.floor(Math.random() * FUN_GEOMETRIES.length)],
       typedIndex: 0,
       position: [bestX, -3.5, bestZ],
       speed,
@@ -264,7 +270,8 @@ export const useTypingGameStore = create((set, get) => ({
       swayPhase,
       scale: state.mode === 'words' ? 0.65 : 0.45,
       color,
-      powerUpType
+      powerUpType,
+      spawnTime: Date.now()
     };
 
     set({ balloons: [...state.balloons, newBalloon] });
@@ -307,6 +314,10 @@ export const useTypingGameStore = create((set, get) => ({
     const speedMultiplier = currentPowerUp === 'freeze' ? 0.4 : 1.0;
 
     const moved = [];
+    const cloudBursts = [];
+    let currentStreak = state.streak;
+    let currentTargetId = state.activeTargetId;
+
     state.balloons.forEach((b) => {
       const newY = b.position[1] + (b.speed * speedMultiplier) * delta;
       if (newY < 6.8) {
@@ -314,6 +325,17 @@ export const useTypingGameStore = create((set, get) => ({
           ...b,
           position: [b.position[0], newY, b.position[2]]
         });
+      } else {
+        // Collided with the cloud! Spawn a burst of water bubbles!
+        cloudBursts.push({
+          id: nextBurstId++,
+          position: [b.position[0], 6.8, b.position[2]],
+          color: b.color,
+          text: b.text,
+          timestamp: now
+        });
+        currentStreak = 0; // Missed the balloon! Reset streak combo!
+        if (currentTargetId === b.id) currentTargetId = null;
       }
     });
 
@@ -349,7 +371,7 @@ export const useTypingGameStore = create((set, get) => ({
       }
     }
 
-    const activeBursts = state.bursts.filter((br) => now - br.timestamp < 1200);
+    const activeBursts = [...state.bursts.filter((br) => now - br.timestamp < 2500), ...cloudBursts];
 
     set({
       balloons: moved,
@@ -357,14 +379,16 @@ export const useTypingGameStore = create((set, get) => ({
       activePowerUp: currentPowerUp,
       rushTimeLeft: newRushTime,
       rushActive: newRushActive,
-      rushCompleted: rushCompletedBonus
+      rushCompleted: rushCompletedBonus,
+      streak: currentStreak,
+      activeTargetId: currentTargetId
     });
   },
 
   updateBursts: () => {
     const now = Date.now();
     set({
-      bursts: get().bursts.filter((br) => now - br.timestamp < 600)
+      bursts: get().bursts.filter((br) => now - br.timestamp < 2500)
     });
   },
 
@@ -483,9 +507,24 @@ export const useTypingGameStore = create((set, get) => ({
     const sorted = [...state.balloons].sort((a, b) => b.position[1] - a.position[1]);
 
     if (state.mode === 'letters') {
-      const match = sorted.find((b) => b.text.toUpperCase() === char);
+      // Support multi-letter strings in letters mode!
+      const match = sorted.find((b) => b.text.toUpperCase().startsWith(char));
       if (match) {
-        state.burstBalloonById(match.id);
+        if (match.text.length === 1) {
+          state.burstBalloonById(match.id);
+        } else {
+          // Just slice off the first character! Visually the first letter disappears.
+          playKeyClickSound(char); // extra confirmation pop
+          set({
+            balloons: state.balloons.map(b => 
+              b.id === match.id 
+                ? { ...b, text: b.text.substring(1) } 
+                : b
+            ),
+            score: state.score + 10,
+            streak: state.streak + 1
+          });
+        }
       }
     } else {
       let currentTargetId = state.activeTargetId;

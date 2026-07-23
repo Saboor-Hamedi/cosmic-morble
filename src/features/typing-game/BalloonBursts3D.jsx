@@ -1,26 +1,53 @@
-import React, { useRef, useMemo } from 'react';
+import React, { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useTypingGameStore } from './useTypingGameStore.js';
 import * as THREE from 'three';
 
-const SparklingBurstFireItem = React.memo(function SparklingBurstFireItem({ burst }) {
-  const groupRef = useRef();
-  const ringRef = useRef();
+// Generate a soft, fluffy radial gradient texture for our cloud/smoke particles
+const cloudTexture = (() => {
+  const canvas = document.createElement('canvas');
+  canvas.width = 128;
+  canvas.height = 128;
+  const ctx = canvas.getContext('2d');
   
-  // 16 dazzling fire/sparkle water particles that explode outward and catch the eye clearly
+  // Soft, fluffy smoke puff
+  const gradient = ctx.createRadialGradient(64, 64, 10, 64, 64, 64);
+  gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+  gradient.addColorStop(0.3, 'rgba(255, 255, 255, 0.8)');
+  gradient.addColorStop(0.6, 'rgba(255, 255, 255, 0.3)');
+  gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+  
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, 128, 128);
+  
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.needsUpdate = true;
+  return tex;
+})();
+
+const EvaporatingCloudBurstItem = React.memo(function EvaporatingCloudBurstItem({ burst }) {
+  const groupRef = useRef();
+  const particleRefs = useRef([]);
+  
+  // 12 soft cloud puffs that explode outward, expand, and evaporate!
   const particles = useMemo(() => {
     const parts = [];
-    const colors = ['#ffffff', burst.color || '#38bdf8', '#ffff00', '#60a5fa', '#facc15'];
-    for (let i = 0; i < 16; i++) {
-      const angle = (i / 16) * Math.PI * 2;
-      const elevation = (Math.random() - 0.3) * Math.PI * 0.8;
-      const speed = 3.5 + Math.random() * 3.0;
-      const vx = Math.cos(angle) * Math.cos(elevation) * speed;
-      const vy = Math.sin(elevation) * speed + 1.2; // slight upward lift
-      const vz = Math.sin(angle) * Math.cos(elevation) * speed;
-      const scale = 0.16 + Math.random() * 0.12; // large enough (~15-20px) to be clearly seen!
-      const color = colors[i % colors.length];
-      parts.push({ vx, vy, vz, scale, color });
+    for (let i = 0; i < 12; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 0.5 + Math.random() * 1.5;
+      const vx = Math.cos(angle) * speed;
+      const vy = 0.8 + Math.random() * 2.0; // Float up
+      const vz = Math.sin(angle) * speed;
+      
+      const startScale = 0.8 + Math.random() * 0.8;
+      // It will expand up to 3x its size as it evaporates
+      const targetScale = startScale * (2.0 + Math.random() * 2.0);
+      
+      // Determine color - mostly white/grey, with a hint of the balloon's color
+      const isTinted = Math.random() > 0.6;
+      const color = isTinted && burst.color ? burst.color : '#ffffff';
+
+      parts.push({ vx, vy, vz, startScale, targetScale, color });
     }
     return parts;
   }, [burst.color]);
@@ -28,60 +55,50 @@ const SparklingBurstFireItem = React.memo(function SparklingBurstFireItem({ burs
   useFrame(() => {
     if (!groupRef.current) return;
     const elapsed = Date.now() - burst.timestamp;
-    const progress = Math.min(1.0, elapsed / 650);
+    const elapsedSec = elapsed / 1000;
+    const progress = Math.min(1.0, elapsed / 2500); // 2.5 seconds life
 
-    // Gently scale down over 650ms
-    const scale = Math.max(0.01, 1.0 - progress * 0.8);
-    groupRef.current.scale.set(scale, scale, scale);
+    // Animate each cloud puff
+    particleRefs.current.forEach((mesh, idx) => {
+      if (mesh) {
+        const part = particles[idx];
+        const friction = 1.0 / (1.0 + elapsedSec * 1.5); 
+        
+        // Move outward and float up
+        const x = part.vx * elapsedSec * friction;
+        const y = part.vy * elapsedSec; 
+        const z = part.vz * elapsedSec * friction;
+        mesh.position.set(x, y, z);
+        
+        // EVAPORATE: Expand in scale wildly as it dissipates
+        // Use an easeOut effect so it puffs fast then slows down
+        const easeOut = 1.0 - Math.pow(1.0 - progress, 3.0);
+        const currentScale = part.startScale + (part.targetScale - part.startScale) * easeOut;
+        mesh.scale.set(currentScale, currentScale, currentScale);
 
-    // Expand the outer glowing shockwave ring
-    if (ringRef.current) {
-      const ringScale = 1.0 + progress * 2.2;
-      ringRef.current.scale.set(ringScale, ringScale, ringScale);
-      ringRef.current.material.opacity = Math.max(0, (1.0 - progress) * 0.9);
-    }
+        // EVAPORATE: Fade opacity to 0
+        if (mesh.material) {
+          // Stay opaque for a tiny bit, then fade out smoothly
+          const opacity = progress < 0.2 ? 0.85 : 0.85 * (1.0 - ((progress - 0.2) / 0.8));
+          mesh.material.opacity = Math.max(0, opacity);
+        }
+      }
+    });
   });
 
   return (
-    <group ref={groupRef} position={burst.position} renderOrder={50}>
-      {/* 1. Expanding Glowing Shockwave Ring (`burst fire` splash ring) */}
-      <mesh ref={ringRef} renderOrder={50}>
-        <torusGeometry args={[0.65, 0.08, 16, 32]} />
-        <meshStandardMaterial
-          color="#ffffff"
-          emissive={burst.color || '#38bdf8'}
-          emissiveIntensity={1.5}
-          roughness={0.1}
-          transparent
-          opacity={0.9}
-          depthWrite={false}
-        />
-      </mesh>
-
-      {/* 2. 16 Sparkling Burst Fire / Splash Particles */}
-      {particles.map((part, idx) => {
-        const elapsedSec = (Date.now() - burst.timestamp) / 1000;
-        const x = part.vx * elapsedSec;
-        const y = part.vy * elapsedSec - 2.8 * elapsedSec * elapsedSec; // gravity curve
-        const z = part.vz * elapsedSec;
-        const progress = Math.min(1.0, (Date.now() - burst.timestamp) / 650);
-        const particleOpacity = Math.max(0, 1.0 - progress);
-
-        return (
-          <mesh key={idx} position={[x, y, z]} renderOrder={51}>
-            <sphereGeometry args={[part.scale, 16, 16]} />
-            <meshStandardMaterial
-              color={part.color}
-              emissive={part.color}
-              emissiveIntensity={1.8}
-              roughness={0.1}
-              transparent
-              opacity={particleOpacity}
-              depthWrite={false}
-            />
-          </mesh>
-        );
-      })}
+    <group ref={groupRef} position={burst.position}>
+      {particles.map((part, idx) => (
+        <sprite key={idx} ref={(el) => (particleRefs.current[idx] = el)}>
+          <spriteMaterial 
+            map={cloudTexture} 
+            color={part.color} 
+            transparent={true} 
+            opacity={0.85} 
+            depthWrite={false}
+          />
+        </sprite>
+      ))}
     </group>
   );
 });
@@ -98,7 +115,7 @@ export const BalloonBursts3D = React.memo(function BalloonBursts3D() {
   return (
     <group>
       {bursts.map((burst) => (
-        <SparklingBurstFireItem key={burst.id} burst={burst} />
+        <EvaporatingCloudBurstItem key={burst.id} burst={burst} />
       ))}
     </group>
   );
