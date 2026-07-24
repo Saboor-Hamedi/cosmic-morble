@@ -41,9 +41,11 @@
       "createStartMenuShortcut": true,
       "shortcutName": "Cosmic Morble"
     },
+    "npmRebuild": false,
     "files": [
       "dist/**/*",
-      "dist-electron/**/*"
+      "dist-electron/**/*",
+      "package.json"
     ],
     "directories": {
       "output": "release"
