@@ -29,19 +29,19 @@ const EvaporatingCloudBurstItem = React.memo(function EvaporatingCloudBurstItem(
   const groupRef = useRef();
   const particleRefs = useRef([]);
   
-  // 12 soft cloud puffs that explode outward, expand, and evaporate!
+  // 6 soft cloud puffs that explode outward, expand, and evaporate!
   const particles = useMemo(() => {
     const parts = [];
-    for (let i = 0; i < 12; i++) {
+    for (let i = 0; i < 6; i++) {
       const angle = Math.random() * Math.PI * 2;
       const speed = 0.5 + Math.random() * 1.5;
       const vx = Math.cos(angle) * speed;
       const vy = 0.8 + Math.random() * 2.0; // Float up
       const vz = Math.sin(angle) * speed;
       
-      const startScale = 0.8 + Math.random() * 0.8;
-      // It will expand up to 3x its size as it evaporates
-      const targetScale = startScale * (2.0 + Math.random() * 2.0);
+      const startScale = 0.5 + Math.random() * 0.5;
+      // It will expand up to 4x its size as it evaporates quickly
+      const targetScale = startScale * (3.0 + Math.random() * 2.0);
       
       // Determine color - mostly white/grey, with a hint of the balloon's color
       const isTinted = Math.random() > 0.6;
@@ -56,13 +56,13 @@ const EvaporatingCloudBurstItem = React.memo(function EvaporatingCloudBurstItem(
     if (!groupRef.current) return;
     const elapsed = Date.now() - burst.timestamp;
     const elapsedSec = elapsed / 1000;
-    const progress = Math.min(1.0, elapsed / 2500); // 2.5 seconds life
+    const progress = Math.min(1.0, elapsed / 1800); // 1.8 seconds life for faster evaporation
 
     // Animate each cloud puff
     particleRefs.current.forEach((mesh, idx) => {
       if (mesh) {
         const part = particles[idx];
-        const friction = 1.0 / (1.0 + elapsedSec * 1.5); 
+        const friction = 1.0 / (1.0 + elapsedSec * 2.5); 
         
         // Move outward and float up
         const x = part.vx * elapsedSec * friction;
@@ -78,8 +78,8 @@ const EvaporatingCloudBurstItem = React.memo(function EvaporatingCloudBurstItem(
 
         // EVAPORATE: Fade opacity to 0
         if (mesh.material) {
-          // Stay opaque for a tiny bit, then fade out smoothly
-          const opacity = progress < 0.2 ? 0.85 : 0.85 * (1.0 - ((progress - 0.2) / 0.8));
+          // Stay opaque for a tiny bit, then fade out smoothly but quickly
+          const opacity = progress < 0.1 ? 0.5 : 0.5 * (1.0 - ((progress - 0.1) / 0.9));
           mesh.material.opacity = Math.max(0, opacity);
         }
       }

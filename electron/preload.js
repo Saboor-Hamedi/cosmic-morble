@@ -18,4 +18,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   installUpdate: () => ipcRenderer.send('updater:install'),
   // Renderer calls this to manually trigger an update check
   checkForUpdates: () => ipcRenderer.send('updater:check'),
+
+  // ── Database Bridge ─────────────────────────────────────────────────────
+  db: {
+    getProgress: () => ipcRenderer.invoke('db:getProgress'),
+    saveProgress: (data) => ipcRenderer.invoke('db:saveProgress', data)
+  }
 });

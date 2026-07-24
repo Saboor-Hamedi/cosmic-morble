@@ -44,22 +44,21 @@ export const FluffyClouds3D = React.memo(function FluffyClouds3D() {
   const clouds = useMemo(() => {
     const arr = [];
     
-    // Generate 15 massive but highly transparent volumetric soft-particle clouds!
-    for (let i = 0; i < 15; i++) {
-      const isFarBackground = i < 7;
-      const isMid = i >= 7 && i < 12;
+    // Generate 6 highly transparent volumetric soft-particle clouds to frame the sky without being too much
+    for (let i = 0; i < 6; i++) {
+      const isFarBackground = i < 3;
       
       let baseZ, baseY, speed, bounds, volume, opacity, color;
 
       if (isFarBackground) {
-        baseZ = -18.0 - Math.random() * 4.0; // Deep background
+        baseZ = -18.0 - Math.random() * 4.0;
         baseY = 6.0 + Math.random() * 5.0;
-        speed = (Math.random() > 0.5 ? 1 : -1) * (0.05 + Math.random() * 0.05);
-        bounds = [15 + Math.random() * 5, 5 + Math.random() * 2, 4];
-        volume = 12 + Math.random() * 4;
-        opacity = 0.25 + Math.random() * 0.15; // highly transparent!
+        speed = (Math.random() > 0.5 ? 1 : -1) * (0.03 + Math.random() * 0.03);
+        bounds = [8 + Math.random() * 3, 2 + Math.random() * 1, 2];
+        volume = 6 + Math.random() * 2;
+        opacity = 0.15 + Math.random() * 0.1;
         color = '#cbd5e1'; 
-      } else if (isMid) {
+      } else {
         baseZ = -12.0 - Math.random() * 4.0;
         baseY = 7.5 + Math.random() * 3.5;
         speed = (Math.random() > 0.5 ? 1 : -1) * (0.1 + Math.random() * 0.1);
@@ -67,14 +66,6 @@ export const FluffyClouds3D = React.memo(function FluffyClouds3D() {
         volume = 8 + Math.random() * 3;
         opacity = 0.35 + Math.random() * 0.15; // semi-transparent
         color = '#f1f5f9';
-      } else {
-        baseZ = -7.0 - Math.random() * 3.0; // Nearest layer
-        baseY = 9.0 + Math.random() * 2.5;
-        speed = (Math.random() > 0.5 ? 1 : -1) * (0.15 + Math.random() * 0.15);
-        bounds = [6 + Math.random() * 3, 2 + Math.random() * 1.5, 2];
-        volume = 5 + Math.random() * 3;
-        opacity = 0.45 + Math.random() * 0.15; // still very see-through
-        color = '#ffffff';
       }
 
       arr.push({

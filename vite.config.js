@@ -24,6 +24,7 @@ export default defineConfig({
         vite: {
           build: {
             rollupOptions: {
+              external: ['sqlite3'],
               output: {
                 format: 'cjs',
                 entryFileNames: 'preload.js',

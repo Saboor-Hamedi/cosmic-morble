@@ -13,28 +13,37 @@ function ensureBuffers(ctx) {
   try {
     const sampleRate = ctx.sampleRate;
     
-    // 1. Pre-generate crisp, instant Balloon Pop Buffer (0.14 seconds)
-    const popLen = Math.floor(sampleRate * 0.14);
+    // 1. Pre-generate ultra juicy Balloon Pop Impact Buffer (0.35 seconds)
+    const popLen = Math.floor(sampleRate * 0.35);
     popBuffer = ctx.createBuffer(1, popLen, sampleRate);
     const popData = popBuffer.getChannelData(0);
     for (let i = 0; i < popLen; i++) {
       const t = i / sampleRate;
-      const env = Math.exp(-t * 32);
-      const lowThump = Math.sin(2 * Math.PI * (160 - t * 800) * t);
-      const whiteNoise = (Math.random() * 2 - 1) * Math.exp(-t * 45);
-      popData[i] = (lowThump * 0.65 + whiteNoise * 0.5) * env;
+      
+      // Punchy Bass Thump (Impact)
+      const bassEnv = Math.exp(-t * 22);
+      const lowThump = Math.sin(2 * Math.PI * (220 - t * 1500) * t); // Massive pitch drop
+      
+      // Glass/Water shatter noise (Squelch)
+      const noiseEnv = Math.exp(-t * 14);
+      const whiteNoise = (Math.random() * 2 - 1);
+      
+      // Mix and soft clip for saturation
+      let sample = (lowThump * 1.8 * bassEnv) + (whiteNoise * 0.7 * noiseEnv);
+      sample = Math.max(-1, Math.min(1, sample)); // Hard limiter
+      popData[i] = sample;
     }
 
-    // 2. Pre-generate crisp mechanical Key Click Buffer (0.04 seconds)
-    const clickLen = Math.floor(sampleRate * 0.04);
+    // 2. Pre-generate juicy mechanical Key Click Buffer (0.06 seconds)
+    const clickLen = Math.floor(sampleRate * 0.06);
     clickBuffer = ctx.createBuffer(1, clickLen, sampleRate);
     const clickData = clickBuffer.getChannelData(0);
     for (let i = 0; i < clickLen; i++) {
       const t = i / sampleRate;
-      const env = Math.exp(-t * 90);
-      const clickTone = Math.sin(2 * Math.PI * 400 * t) * env;
-      const transient = (Math.random() * 2 - 1) * Math.exp(-t * 200) * 0.4;
-      clickData[i] = (clickTone + transient) * 0.5;
+      const env = Math.exp(-t * 60);
+      const clickTone = Math.sin(2 * Math.PI * (800 - t * 6000) * t) * env; // sharp downward click
+      const transient = (Math.random() * 2 - 1) * Math.exp(-t * 180) * 0.6;
+      clickData[i] = (clickTone * 0.4 + transient);
     }
 
     // 3. Pre-generate cheerful Celebration Chime Buffer (0.28 seconds)
@@ -55,7 +64,72 @@ export function playBalloonPopSound() {
   if (!ctx) return;
   ensureBuffers(ctx);
 
+  const soundTheme = useTypingGameStore.getState().soundTheme || 'synth';
+
   try {
+    const now = ctx.currentTime;
+
+    // Optional win chord on top of pop
+    if (winBuffer) {
+      const source2 = ctx.createBufferSource();
+      const gain2 = ctx.createGain();
+      source2.buffer = winBuffer;
+      gain2.gain.value = 0.25;
+      source2.connect(gain2);
+      gain2.connect(ctx.destination);
+      source2.start(0);
+    }
+
+    if (soundTheme === 'piano') {
+      // Musical chord pop
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(523.25, now);
+      osc.frequency.exponentialRampToValueAtTime(130.81, now + 0.4);
+      gain.gain.setValueAtTime(0.8, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.4);
+      return;
+    }
+
+    if (soundTheme === 'laser') {
+      // Pew pew laser explosion
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(800, now);
+      osc.frequency.exponentialRampToValueAtTime(50, now + 0.3);
+      gain.gain.setValueAtTime(0.5, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.3);
+      return;
+    }
+
+    if (soundTheme === 'water') {
+      // Bloop splash
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(200, now);
+      osc.frequency.linearRampToValueAtTime(600, now + 0.1);
+      osc.frequency.exponentialRampToValueAtTime(100, now + 0.3);
+      gain.gain.setValueAtTime(0.7, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.3);
+      return;
+    }
+
+    // Default 'synth' thick punchy thump
     if (popBuffer) {
       const source = ctx.createBufferSource();
       const gain = ctx.createGain();
@@ -64,16 +138,6 @@ export function playBalloonPopSound() {
       source.connect(gain);
       gain.connect(ctx.destination);
       source.start(0);
-    }
-
-    if (winBuffer) {
-      const source2 = ctx.createBufferSource();
-      const gain2 = ctx.createGain();
-      source2.buffer = winBuffer;
-      gain2.gain.value = 0.45;
-      source2.connect(gain2);
-      gain2.connect(ctx.destination);
-      source2.start(0);
     }
   } catch {}
 }

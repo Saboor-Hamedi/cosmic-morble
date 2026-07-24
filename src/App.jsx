@@ -28,6 +28,14 @@ function GlobalKeyboardListener() {
     const t4 = setTimeout(forceFocus, 1200);
 
     const handleKeyDown = (e) => {
+      // Allow Enter to start the game if in menu or game over
+      const state = useTypingGameStore.getState();
+      if ((e.key === 'Enter' || e.code === 'Enter' || e.code === 'NumpadEnter') && state.gameState !== 'playing') {
+        e.preventDefault();
+        state.startGame();
+        return;
+      }
+
       // Check for Ctrl + Enter toggle pause (`cntl + enter toggle the game stop and start`)
       if (e.ctrlKey && (e.key === 'Enter' || e.code === 'Enter' || e.code === 'NumpadEnter')) {
         e.preventDefault();
@@ -38,8 +46,15 @@ function GlobalKeyboardListener() {
       // Check for Ctrl + Alt mode switch (`cntl + alt switch between letter and word`)
       if (e.ctrlKey && e.altKey) {
         e.preventDefault();
-        const currentMode = useTypingGameStore.getState().mode;
-        useTypingGameStore.getState().setMode(currentMode === 'letters' ? 'words' : 'letters');
+        const currentMode = state.mode;
+        state.setMode(currentMode === 'letters' ? 'words' : 'letters');
+        return;
+      }
+
+      // Check for Ctrl + S to change sound theme
+      if (e.ctrlKey && (e.key === 's' || e.key === 'S')) {
+        e.preventDefault();
+        state.cycleSoundTheme();
         return;
       }
 
@@ -56,7 +71,8 @@ function GlobalKeyboardListener() {
       // Intercept letters, space, or CapsLock right at the capture phase
       if (e.repeat) return; // Fix bug: prevent key holding from bursting multiple balloons instantly
       
-      if (e.key === 'CapsLock' || (e.key && e.key.length === 1)) {
+      // ONLY allow typing if the game is actually playing
+      if (state.gameState === 'playing' && (e.key === 'CapsLock' || (e.key && e.key.length === 1))) {
         pressKey(e.key);
       }
     };
@@ -84,6 +100,11 @@ function GlobalKeyboardListener() {
 }
 
 export default function App() {
+  useEffect(() => {
+    // Load SQLite3 database progress!
+    useTypingGameStore.getState().loadProgress();
+  }, []);
+
   return (
     <GameProvider>
       <GlobalKeyboardListener />

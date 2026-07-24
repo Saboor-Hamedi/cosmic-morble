@@ -1,83 +1,6 @@
 import { create } from 'zustand';
 import { playBalloonPopSound, playKeyClickSound, playWinFanfare, playPowerUpSound } from '../audio/SoundSynthesizer.js';
-
-const SINGLE_LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-const KIDS_WORDS = [
-  // Animals & Creatures
-  'CAT', 'DOG', 'SUN', 'STAR', 'MOON', 'JUMP', 'PLAY',
-  'TREE', 'FISH', 'BIRD', 'LION', 'BEAR', 'CAKE', 'HAPPY', 'LOVE',
-  'COOL', 'HERO', 'BLUE', 'RED', 'PINK', 'GOLD', 'FAST', 'FUN',
-  'SHIP', 'ROBOT', 'APPLE', 'DUCK', 'FROG', 'MILK', 'PONY', 'ZOO',
-  'TIGER', 'PANDA', 'KOALA', 'SHARK', 'WHALE', 'DOLPHIN', 'EAGLE', 'FALCON',
-  'ZEBRA', 'GIRAFFE', 'MONKEY', 'RABBIT', 'TURTLE', 'PENGUIN', 'DRAGON', 'UNICORN',
-  'DINOSAUR', 'BUTTERFLY', 'PUPPY', 'KITTEN', 'OTTER', 'SWAN', 'OCTOPUS', 'SEAL',
-  'CHEETAH', 'LEOPARD', 'GORILLA', 'HAMSTER', 'PARROT', 'TOUCAN', 'IGUANA', 'CHAMELEON',
-  'LADYBUG', 'FIREFLY', 'MANATEE', 'SEAHORSE', 'STARFISH', 'JELLYFISH', 'STINGRAY',
-  // Space, Planets & Cosmic Adventure
-  'SPACE', 'COMET', 'GALAXY', 'ORBIT', 'ASTRO', 'ALIEN', 'NEBULA', 'ROCKET',
-  'PLANET', 'COSMIC', 'MERCURY', 'VENUS', 'EARTH', 'MARS', 'SATURN', 'JUPITER',
-  'URANUS', 'NEPTUNE', 'PLUTO', 'METEOR', 'SOLAR', 'LUNAR', 'COSMOS', 'VOYAGE',
-  'ASTRONAUT', 'SATELLITE', 'STARLIGHT', 'HORIZON', 'ECLIPSE', 'EQUINOX', 'POLARIS', 'CRATER',
-  'GRAVITY', 'SHUTTLE', 'SKYLAB', 'STATION', 'QUASAR', 'PULSAR', 'SUPERNOVA', 'CLUSTER',
-  // Nature, Elements & Science Wonders
-  'OCEAN', 'RIVER', 'MOUNTAIN', 'RAINBOW', 'THUNDER', 'STORM', 'SUMMER', 'WINTER',
-  'SPRING', 'AUTUMN', 'BREEZE', 'FLOWER', 'GARDEN', 'FOREST', 'ISLAND', 'SUNSET',
-  'GEYSER', 'GLACIER', 'VOLCANO', 'CANYON', 'DESERT', 'JUNGLE', 'SAVANNAH', 'CORAL',
-  'ATOM', 'LASER', 'MAGNET', 'FOSSIL', 'CRYSTAL', 'PRISM', 'ENERGY', 'LIGHT',
-  'SOUND', 'MOTION', 'SCIENCE', 'WONDER', 'NATURE', 'WEATHER', 'CLOUD', 'BREEZY',
-  // Adventure, Magic & Treats
-  'MAGIC', 'CASTLE', 'TREASURE', 'PIRATE', 'KNIGHT', 'WIZARD', 'QUEEN', 'KING',
-  'CROWN', 'DIAMOND', 'RUBY', 'PEARL', 'SPARKLE', 'CANDY', 'COOKIE',
-  'PIZZA', 'ICECREAM', 'BANANA', 'ORANGE', 'BERRY', 'CHERRY', 'SUPER', 'CHAMP',
-  'WINNER', 'ROCKSTAR', 'GAMES', 'PARTY', 'SMILE', 'FRIEND', 'GLOW', 'DREAM',
-  'FLIGHT', 'SOAR', 'BRAVE', 'SHINE', 'CLEVER', 'GENIUS', 'PEACE', 'JOY',
-  'DONUT', 'MUFFIN', 'WAFFLE', 'BURGER', 'NOODLE', 'MELON', 'PEACH', 'HONEY',
-  'SUGAR', 'COCOA', 'SNACK', 'SWEET', 'YUMMY', 'DELIGHT', 'CELEBRATE',
-  // Superpowers, Music & Action
-  'POWER', 'ULTRA', 'HYPER', 'SONIC', 'BLITZ', 'MIGHTY', 'SHIELD', 'VALIANT',
-  'GLORY', 'HEROIC', 'GUITAR', 'DRUM', 'PIANO', 'DANCE', 'SING', 'PAINT',
-  'COLOR', 'RHYTHM', 'FLUTE', 'MELODY', 'HARMONY', 'CHORUS', 'VIOLIN', 'TRUMPET',
-  'SPEED', 'ZOOM', 'DASH', 'SPRINT', 'LEAP', 'BOUND', 'CLIMB', 'EXPLORE',
-  // ── Islamic Words ─────────────────────────────────────────────────────────
-  // Five Pillars & Core Acts of Worship
-  'ISLAM', 'IMAN', 'SALAH', 'ZAKAT', 'SAWM', 'HAJJ', 'WUDU', 'TAYAMMUM',
-  'FAJR', 'DHUHR', 'ASR', 'MAGHRIB', 'ISHA', 'TAHAJJUD', 'WITR', 'SUNNAH',
-  'FARD', 'NAFL', 'DHIKR', 'DUA', 'TAWBAH', 'TAWAKKUL', 'SABR', 'SHUKR',
-  // Allah's Beautiful Names (Al-Asma ul-Husna)
-  'ALLAH', 'RAHMAN', 'RAHIM', 'MALIK', 'QUDDUS', 'SALAM', 'MUMIN', 'AZIZ',
-  'JABBAR', 'MUTAKABBIR', 'KHALIQ', 'BARI', 'MUSAWWIR', 'GHAFFAR', 'QAHHAAR',
-  'WAHHAB', 'RAZZAQ', 'FATTAH', 'ALIM', 'QABID', 'BASIT', 'HAFIZ', 'MUQIT',
-  'HASIB', 'JALIL', 'KARIM', 'RAQIB', 'MUJIB', 'WASI', 'HAKIM', 'WADUD',
-  'MAJID', 'BAITH', 'SHAHID', 'HAQQ', 'WAKIL', 'QAWI', 'MATIN', 'WALI',
-  'HAMID', 'MUHSI', 'MUBDI', 'MUID', 'MUHYI', 'MUMIT', 'HAYY', 'QAYYUM',
-  'AHAD', 'SAMAD', 'QADIR', 'MUQTADIR', 'MUQADDIM', 'MUAKHKHIR', 'AWWAL',
-  'AKHIR', 'ZAHIR', 'BATIN', 'WALI', 'MUTAALI', 'BARR', 'TAWWAB', 'MUNTAQIM',
-  'AFUW', 'RAUF', 'MALIKUL', 'DHUL', 'NAFI', 'NUR', 'HADI', 'BADI',
-  // Prophets of Allah (Peace be upon them)
-  'ADAM', 'IDRIS', 'NUH', 'HUD', 'SALIH', 'IBRAHIM', 'ISMAIL', 'ISHAQ',
-  'YAQUB', 'YUSUF', 'LUT', 'SHUAIB', 'MUSA', 'HARUN', 'DAWUD', 'SULAIMAN',
-  'AYYUB', 'YUNUS', 'ILYAS', 'ALYASA', 'DHULKIFL', 'ZAKARIYYA', 'YAHYA',
-  'ISA', 'MUHAMMAD',
-  // Quran, Revelation & Islamic Knowledge
-  'QURAN', 'SURAH', 'AYAH', 'TAFSIR', 'TAJWEED', 'TILAWAH', 'HIFDH', 'HAFIZ',
-  'HADITH', 'SUNNAH', 'FIQH', 'AQIDAH', 'TAWHID', 'SHIRK', 'KUFR', 'TAQWA',
-  'ILAM', 'FATWA', 'IJTIHAD', 'IJMA', 'QIYAS', 'USUL', 'MAQASID', 'SHARIA',
-  // Sacred Places & History
-  'MECCA', 'MEDINA', 'KAABA', 'MASJID', 'MOSQUE', 'MINARET', 'MIHRAB', 'MIMBAR',
-  'MADINAH', 'BADR', 'UHUD', 'KHANDAQ', 'TABUK', 'HUNAYN', 'TAIF', 'JERUSALEM',
-  'AQSA', 'DOME', 'ZAMZAM', 'ARAFAT', 'MINA', 'MUZDALIFAH', 'SAFA', 'MARWA',
-  // Islamic Virtues & Character
-  'ADAB', 'AKHLAQ', 'AMANAH', 'SIDQ', 'ADALAH', 'IHSAN', 'IKHLAS', 'BIRR',
-  'TAWADU', 'HILM', 'AFUW', 'RAHMA', 'ADALA', 'HAYA', 'WAFA', 'UKHUWWAH',
-  'AMANA', 'ZUHD', 'QANAAH', 'SHAJA', 'MURUWWAH', 'KARAM', 'INFAQ', 'SADAQAH',
-  // Islamic Celebrations & Events
-  'EID', 'RAMADAN', 'IFTAR', 'SUHOOR', 'LAYLAT', 'QADR', 'FITR', 'ADHA',
-  'MUBARAK', 'HIJRA', 'ISRA', 'MIRAJ', 'ASHURA', 'DHULHIJJA', 'MUHARRAM',
-  // Common Islamic Phrases (romanised)
-  'BISMILLAH', 'ALHAMDULILLAH', 'SUBHANALLAH', 'ALLAHU', 'AKBAR', 'INSHALLAH',
-  'MASHALLAH', 'ASTAGHFIRULLAH', 'ASSALAM', 'ALAYKUM', 'JAZAKALLAH', 'BARAKALLAH',
-  'HAMDULILLAH', 'AMEEN', 'YARHAMUK', 'YARHAMUKALLAH',
-];
+import { SINGLE_LETTERS, KIDS_WORDS } from './words.js';
 
 const BALLOON_COLORS = [
   '#ff0055', '#00b4d8', '#00ff88', '#ff9e00', 
@@ -90,9 +13,80 @@ let nextBalloonId = 1;
 let nextBurstId = 1;
 
 export const useTypingGameStore = create((set, get) => ({
+  gameState: 'menu', // 'menu', 'playing', 'gameover'
+  lives: 3,
   mode: 'letters', // 'letters' or 'words'
   capsLock: true,  // true = uppercase, false = lowercase
   isPaused: false, // true = paused (`cntl + enter toggle`)
+  
+  // Progression & DB State
+  currentLevel: 1,
+  totalScore: 0,
+  highestCombo: 0,
+  unlockedThemes: [],
+  shakeTime: 0,
+
+  triggerShake: () => set({ shakeTime: Date.now() }),
+
+  loadProgress: async () => {
+    if (window.electronAPI && window.electronAPI.db) {
+      try {
+        const data = await window.electronAPI.db.getProgress();
+        if (data) {
+          set((state) => ({
+            currentLevel: data.currentLevel || 1,
+            totalScore: data.totalScore || 0,
+            highestCombo: data.highestCombo || 0,
+            unlockedThemes: data.unlockedThemes ? JSON.parse(data.unlockedThemes) : []
+          }));
+        }
+      } catch (err) {
+        console.error("Failed to load progress from DB", err);
+      }
+    }
+  },
+
+  saveProgress: async () => {
+    if (window.electronAPI && window.electronAPI.db) {
+      const s = get();
+      try {
+        await window.electronAPI.db.saveProgress({
+          currentLevel: s.currentLevel,
+          totalScore: s.totalScore,
+          highestCombo: s.highestCombo,
+          unlockedThemes: s.unlockedThemes
+        });
+      } catch (err) {
+        console.error("Failed to save progress to DB", err);
+      }
+    }
+  },
+
+  startGame: () => set({
+    gameState: 'playing',
+    isPaused: false,
+    score: 0,
+    streak: 0,
+    maxStreak: 0,
+    lives: 3,
+    nextBossScore: 1000,
+    balloons: [],
+    bursts: [],
+    lasers: [],
+    activeTargetId: null,
+    typedIndex: 0
+  }),
+
+  gameOver: () => {
+    const s = get();
+    set({
+      gameState: 'gameover',
+      isPaused: true,
+      totalScore: s.totalScore + s.score,
+      highestCombo: Math.max(s.highestCombo, s.maxStreak)
+    });
+    get().saveProgress();
+  },
   
   // Feature 1: Sound Packs (`synth`, `piano`, `laser`, `water`)
   soundTheme: 'synth',
@@ -199,9 +193,15 @@ export const useTypingGameStore = create((set, get) => ({
 
   spawnBalloon: () => {
     const state = get();
-    if (state.isPaused) return;
-    const maxBalloons = state.mode === 'letters' ? 8 : 5;
-    if (state.balloons.length >= maxBalloons) return;
+    // Only spawn balloons if playing
+    if (state.isPaused || state.gameState !== 'playing') return;
+    
+    // Difficulty Scaling: Increase max balloons on screen based on score
+    const scoreBonus = Math.floor(state.score / 300);
+    const maxBalloons = (state.mode === 'letters' ? 8 : 5) + scoreBonus;
+    // Cap it at a maximum to prevent chaos
+    const absoluteMax = state.mode === 'letters' ? 14 : 9;
+    if (state.balloons.length >= Math.min(maxBalloons, absoluteMax)) return;
 
     let bestX = null;
     let bestZ = null;
@@ -226,15 +226,31 @@ export const useTypingGameStore = create((set, get) => ({
     if (bestX === null) return;
 
     const color = BALLOON_COLORS[Math.floor(Math.random() * BALLOON_COLORS.length)];
-    let text = '';
+    
+    // Boss Balloon Logic
+    let isBoss = false;
+    if (state.score >= (state.nextBossScore || 1000)) {
+      isBoss = true;
+      // Increment by 2500 so popping a Boss (500+ pts) doesn't instantly trigger another one
+      set({ nextBossScore: (state.nextBossScore || 1000) + 2500 });
+    }
+
+    let text;
     if (state.mode === 'letters') {
-      text = SINGLE_LETTERS[Math.floor(Math.random() * SINGLE_LETTERS.length)];
-      // After ~50 letters (score > 1000), 40% chance to spawn 2 letters for a fun challenge!
-      if (state.score > 1000 && Math.random() > 0.6) {
-        text += SINGLE_LETTERS[Math.floor(Math.random() * SINGLE_LETTERS.length)];
+      if (isBoss) {
+        // Bosses in Letters mode are at most 2 letters!
+        const twoLetterCombos = ['GO', 'NO', 'HI', 'UP', 'DO', 'ME', 'WE', 'HE', 'BE', 'AS', 'AT', 'BY', 'IN', 'IS', 'IT', 'OF', 'ON', 'OR', 'SO', 'TO'];
+        text = twoLetterCombos[Math.floor(Math.random() * twoLetterCombos.length)];
+      } else {
+        text = SINGLE_LETTERS[Math.floor(Math.random() * SINGLE_LETTERS.length)];
       }
     } else {
-      text = KIDS_WORDS[Math.floor(Math.random() * KIDS_WORDS.length)];
+      // Words mode
+      // Remove giant words: normal words are 3-4 letters, bosses are also kept simple (max 4-5 letters).
+      // The user requested: "remove the gaint words, 2 letters are going to max for the letters"
+      const maxLen = isBoss ? 5 : 4;
+      const wordsPool = KIDS_WORDS.filter(w => w.length <= maxLen);
+      text = wordsPool[Math.floor(Math.random() * wordsPool.length)];
     }
 
     text = state.capsLock ? text.toUpperCase() : text.toLowerCase();
@@ -246,31 +262,51 @@ export const useTypingGameStore = create((set, get) => ({
       powerUpType = r < 0.36 ? 'rainbow' : r < 0.68 ? 'freeze' : 'starburst';
     }
 
-    // Speed formula: if words mode, make them rise much slower so children have time to read/type. If rush mode (`Meteor Storm`), rise faster.
-    let speed = (0.8 + Math.random() * 0.55) * (state.gameStyle === 'rush' ? 1.55 : 1.0);
-    if (state.mode === 'words') {
-      speed = (0.40 + Math.random() * 0.25) * (state.gameStyle === 'rush' ? 1.45 : 1.0);
+    // Difficulty Scaling: Speed Multiplier
+    // Every 500 points, balloons get 15% faster, capped at +100% speed
+    const difficultySpeedMultiplier = Math.min(2.0, 1.0 + (state.score / 500) * 0.15);
+
+    // Speed formula: if words mode or Boss, rise much slower so children have time to read/type. 
+    let speed = (0.8 + Math.random() * 0.55) * (state.gameStyle === 'rush' ? 1.55 : 1.0) * difficultySpeedMultiplier;
+    if (state.mode === 'words' || isBoss) {
+      speed = (0.40 + Math.random() * 0.25) * (state.gameStyle === 'rush' ? 1.45 : 1.0) * difficultySpeedMultiplier;
     }
+    // Bosses are massive and slow!
+    if (isBoss) speed *= 0.6;
 
     const swaySpeed = 1.6 + Math.random() * 0.8;
     const swayAmount = 0.18 + Math.random() * 0.14;
     const swayPhase = Math.random() * Math.PI * 2;
     const FUN_GEOMETRIES = ['sphere', 'torus', 'icosahedron', 'capsule', 'cylinder'];
+    // Randomize movement pattern based on current level!
+    // Level 1: Default
+    // Level 2+: Introduce fast meteors
+    // Level 3+: Introduce zig-zag UFOs
+    let movementPattern = 'default';
+    const rand = Math.random();
+    if (state.currentLevel >= 3 && rand < 0.2) {
+      movementPattern = 'zigzag';
+    } else if (state.currentLevel >= 2 && rand < 0.4) {
+      movementPattern = 'meteor';
+    }
 
     const newBalloon = {
       id: nextBalloonId++,
       text,
-      shapeType: state.mode === 'words' ? 'word_capsule' : 'sphere',
-      geometryShape: FUN_GEOMETRIES[Math.floor(Math.random() * FUN_GEOMETRIES.length)],
-      typedIndex: 0,
       position: [bestX, -3.5, bestZ],
-      speed,
-      swaySpeed,
-      swayAmount,
-      swayPhase,
-      scale: state.mode === 'words' ? 0.65 : 0.45,
       color,
+      speed: speed * (movementPattern === 'meteor' ? 1.8 : 1.0),
+      isBoss,
       powerUpType,
+      typedIndex: 0,
+      shapeType: state.mode === 'words' || isBoss ? 'word_capsule' : 'sphere',
+      geometryShape: 'sphere',
+      movementPattern,
+      spawnX: bestX,
+      swaySpeed: 1.6 + Math.random() * 0.8,
+      swayAmount: 0.18 + Math.random() * 0.14,
+      swayPhase: Math.random() * Math.PI * 2,
+      scale: isBoss ? 0.60 : (state.mode === 'words' ? 0.65 : 0.45),
       spawnTime: Date.now()
     };
 
@@ -317,13 +353,20 @@ export const useTypingGameStore = create((set, get) => ({
     const cloudBursts = [];
     let currentStreak = state.streak;
     let currentTargetId = state.activeTargetId;
-
+    let livesLost = 0;
+    
     state.balloons.forEach((b) => {
       const newY = b.position[1] + (b.speed * speedMultiplier) * delta;
+      
+      let newX = b.position[0];
+      if (b.movementPattern === 'zigzag') {
+        newX = b.spawnX + Math.sin(now * 0.003 + b.id) * 2.5; // Wobble back and forth
+      }
+
       if (newY < 6.8) {
         moved.push({
           ...b,
-          position: [b.position[0], newY, b.position[2]]
+          position: [newX, newY, b.position[2]]
         });
       } else {
         // Collided with the cloud! Spawn a burst of water bubbles!
@@ -335,6 +378,7 @@ export const useTypingGameStore = create((set, get) => ({
           timestamp: now
         });
         currentStreak = 0; // Missed the balloon! Reset streak combo!
+        livesLost += 1;
         if (currentTargetId === b.id) currentTargetId = null;
       }
     });
@@ -372,6 +416,19 @@ export const useTypingGameStore = create((set, get) => ({
     }
 
     const activeBursts = [...state.bursts.filter((br) => now - br.timestamp < 2500), ...cloudBursts];
+    
+    let newLives = state.lives - livesLost;
+    if (newLives <= 0) {
+      set({
+        gameState: 'gameover',
+        isPaused: true,
+        lives: 0,
+        balloons: moved,
+        bursts: activeBursts,
+        activeTargetId: currentTargetId
+      });
+      return;
+    }
 
     set({
       balloons: moved,
@@ -381,14 +438,37 @@ export const useTypingGameStore = create((set, get) => ({
       rushActive: newRushActive,
       rushCompleted: rushCompletedBonus,
       streak: currentStreak,
+      lives: newLives,
       activeTargetId: currentTargetId
     });
   },
 
   updateBursts: () => {
     const now = Date.now();
+    const currentBursts = get().bursts;
+    if (currentBursts.length === 0) return;
+    
+    const nextBursts = currentBursts.filter((br) => now - br.timestamp < 2500);
+    if (nextBursts.length !== currentBursts.length) {
+      set({ bursts: nextBursts });
+    }
+  },
+
+  finalizeBurst: (id) => {
+    const state = get();
+    const balloon = state.balloons.find(b => b.id === id);
+    if (!balloon) return; // Already cleaned up or didn't exist
+    
     set({
-      bursts: get().bursts.filter((br) => now - br.timestamp < 2500)
+      balloons: state.balloons.filter(b => b.id !== id),
+      bursts: [...state.bursts, {
+        id: nextBurstId++,
+        position: balloon.position,
+        color: balloon.color,
+        text: balloon.text,
+        powerUpType: balloon.powerUpType,
+        timestamp: Date.now()
+      }]
     });
   },
 
@@ -408,19 +488,43 @@ export const useTypingGameStore = create((set, get) => ({
 
     playBalloonPopSound();
 
-    let basePoints = (state.mode === 'words' ? 50 : 15) + state.streak * 5;
     // If Rainbow double points active, multiply by 2 (`Rainbow Superpower`)
+    let basePoints = (state.mode === 'words' || target.isBoss ? 50 : 15) + state.streak * 5;
+    if (target.isBoss) basePoints += 500; // HUGE Boss Bonus!
     if (state.activePowerUp === 'rainbow' || target.powerUpType === 'rainbow') {
       basePoints *= 2;
     }
 
-    let newScore = state.score + basePoints;
+    const newScore = state.score + basePoints;
     const newStreak = state.streak + 1;
     const newMaxCombo = Math.max(state.maxCombo, newStreak);
-    const newWordsTyped = state.totalWordsTyped + (state.mode === 'words' ? 1 : 0);
+    const newWordsTyped = state.totalWordsTyped + 1;
+    
+    // Level up every 15 words typed or 3000 points!
+    let newLevel = state.currentLevel;
+    if (newScore > newLevel * 2000) {
+      newLevel += 1;
+      playWinFanfare(); // Play a nice sound on level up
+      state.triggerShake(); // Big screen shake for level up
+      
+      // Every 3 levels, unlock a random theme
+      if (newLevel % 3 === 0) {
+        const themeId = `theme${Math.floor(Math.random() * 10) + 11}`; // Unlock themes 11-20
+        if (!state.unlockedThemes.includes(themeId)) {
+          set({ unlockedThemes: [...state.unlockedThemes, themeId] });
+          get().saveProgress();
+        }
+      }
+    }
+
+    // Boss kill shake
+    if (target.isBoss) {
+      state.triggerShake();
+    }
+
     let newPowerUpsCollected = state.powerUpsCollected;
     let nextActivePowerUp = state.activePowerUp;
-    let nextPowerUpEndTime = state.powerUpEndTime;
+    let powerUpEndTime = state.powerUpEndTime;
 
     // Handle superpower trigger
     if (target.powerUpType) {
@@ -428,37 +532,23 @@ export const useTypingGameStore = create((set, get) => ({
       playPowerUpSound();
       if (target.powerUpType === 'rainbow') {
         nextActivePowerUp = 'rainbow';
-        nextPowerUpEndTime = Date.now() + 15000;
+        powerUpEndTime = Date.now() + 15000;
       } else if (target.powerUpType === 'freeze') {
         nextActivePowerUp = 'freeze';
-        nextPowerUpEndTime = Date.now() + 10000;
+        powerUpEndTime = Date.now() + 10000;
       }
     }
-
-    const newBurst = {
-      id: nextBurstId++,
-      position: [...target.position],
-      color: target.color,
-      text: target.text,
-      timestamp: Date.now()
-    };
 
     if (state.mode === 'words') {
       playWinFanfare();
     }
-
-    let remainingBalloons = state.balloons.filter((b) => b.id !== id);
-    let extraBursts = [newBurst];
-
-    // If Starburst superpower triggered, we used to pop nearby bubbles, but this confused users who thought it was a bug where typing a single letter cleared the screen!
-    // We will just grant extra score or play a big sound instead, leaving the other balloons alone.
-    if (target.powerUpType === 'starburst') {
-      newScore += 50; // Bonus points for starburst instead of popping everything!
-    }
+    
+    // Shoot a standalone bullet from near the camera (Z=15) into the screen!
+    import('./useBullet.js').then(({ useBullet }) => {
+      useBullet.getState().fireBullet([0, 0, 15], [...target.position], target.color, id);
+    });
 
     set({
-      balloons: remainingBalloons,
-      bursts: [...state.bursts, ...extraBursts],
       score: newScore,
       streak: newStreak,
       highScore: Math.max(state.highScore, newScore),
@@ -466,7 +556,10 @@ export const useTypingGameStore = create((set, get) => ({
       totalWordsTyped: newWordsTyped,
       powerUpsCollected: newPowerUpsCollected,
       activePowerUp: nextActivePowerUp,
-      powerUpEndTime: nextPowerUpEndTime
+      powerUpEndTime,
+      activeTargetId: state.activeTargetId === id ? null : state.activeTargetId,
+      // Mark it as popped so the bullet can travel to it, but don't delete it or burst yet!
+      balloons: state.balloons.map((b) => b.id === id ? { ...b, isPopped: true } : b)
     });
   },
 
@@ -503,27 +596,33 @@ export const useTypingGameStore = create((set, get) => ({
     playKeyClickSound(char);
 
     // Prioritize the HIGHEST balloon on the screen (the one closest to escaping)
-    // This fixes the bug where users type a letter to pop a high balloon, but a newly spawned identical letter at the bottom pops instead, making them think their keystroke was ignored!
-    const sorted = [...state.balloons].sort((a, b) => b.position[1] - a.position[1]);
+    // Ignore popped balloons that are just waiting for their arrow to hit!
+    const activeBalloons = state.balloons.filter(b => !b.isPopped);
+    const sorted = activeBalloons.sort((a, b) => b.position[1] - a.position[1]);
 
     if (state.mode === 'letters') {
-      // Support multi-letter strings in letters mode!
-      const match = sorted.find((b) => b.text.toUpperCase().startsWith(char));
+      // Support multi-letter strings in letters mode by checking the next untyped character
+      const match = sorted.find((b) => b.text[b.typedIndex || 0].toUpperCase() === char);
       if (match) {
         if (match.text.length === 1) {
           state.burstBalloonById(match.id);
         } else {
-          // Just slice off the first character! Visually the first letter disappears.
-          playKeyClickSound(char); // extra confirmation pop
-          set({
-            balloons: state.balloons.map(b => 
-              b.id === match.id 
-                ? { ...b, text: b.text.substring(1) } 
-                : b
-            ),
-            score: state.score + 10,
-            streak: state.streak + 1
-          });
+          // Boss balloon or multi-letter word in letters mode
+          const isComplete = match.typedIndex + 1 >= match.text.length;
+          if (isComplete) {
+            state.burstBalloonById(match.id);
+          } else {
+            playKeyClickSound(char);
+            set({
+              balloons: state.balloons.map(b => 
+                b.id === match.id 
+                  ? { ...b, typedIndex: b.typedIndex + 1 } 
+                  : b
+              ),
+              score: state.score + 10,
+              streak: state.streak + 1
+            });
+          }
         }
       }
     } else {

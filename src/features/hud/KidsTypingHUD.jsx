@@ -27,7 +27,7 @@ function hexToRgb(hex) {
 
 export const KidsTypingHUD = memo(function KidsTypingHUD() {
   const {
-    score, streak, highScore, mode, setMode, capsLock, toggleCapsLock,
+    score, streak, highScore, lives, mode, setMode, capsLock, toggleCapsLock,
     isPaused, togglePaused, soundTheme, cycleSoundTheme,
     gameStyle, toggleRushMode, rushTimeLeft, activePowerUp, toggleBadgesModal
   } = useTypingGameStore();
@@ -70,6 +70,12 @@ export const KidsTypingHUD = memo(function KidsTypingHUD() {
             <span style={{ fontSize: '11px' }}>⭐</span>
             <span>{score.toLocaleString()}</span>
           </span>
+
+          {lives !== undefined && (
+            <span style={{ color: 'rgba(239, 68, 68, 0.9)', display: 'flex', alignItems: 'center', gap: '3px', marginLeft: '4px' }}>
+              <span style={{ fontSize: '12px' }}>{'❤️'.repeat(lives)}{'💔'.repeat(3 - lives)}</span>
+            </span>
+          )}
 
           {streak > 1 && (
             <span style={{ color: 'rgba(251, 146, 60, 0.85)', display: 'flex', alignItems: 'center', gap: '3px' }}>

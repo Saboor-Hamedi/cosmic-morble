@@ -7,6 +7,7 @@ import { createRequire } from 'node:module';
 // electron-updater is CommonJS — use createRequire to import it from ESM main
 const require = createRequire(import.meta.url);
 const { autoUpdater } = require('electron-updater');
+const sqlite3 = require('sqlite3').verbose();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -23,6 +24,35 @@ let win = null;
 function sendUpdaterStatus(event, data = {}) {
   if (win && !win.isDestroyed()) {
     win.webContents.send('updater:status', { event, ...data });
+  }
+}
+
+// ─── Setup SQLite3 Database ────────────────────────────────────────────────
+let db = null;
+function setupDatabase() {
+  try {
+    const dbPath = path.join(app.getPath('userData'), 'cosmic-morble.db');
+    db = new sqlite3.Database(dbPath, (err) => {
+      if (err) console.error("Database connection error:", err);
+    });
+    
+    db.serialize(() => {
+      db.run(`CREATE TABLE IF NOT EXISTS progress (
+        id INTEGER PRIMARY KEY,
+        currentLevel INTEGER DEFAULT 1,
+        totalScore INTEGER DEFAULT 0,
+        highestCombo INTEGER DEFAULT 0,
+        unlockedThemes TEXT DEFAULT '[]'
+      )`);
+      // Ensure exactly one row exists
+      db.get(`SELECT id FROM progress WHERE id = 1`, (err, row) => {
+        if (!row) {
+          db.run(`INSERT INTO progress (id, currentLevel, totalScore, highestCombo, unlockedThemes) VALUES (1, 1, 0, 0, '[]')`);
+        }
+      });
+    });
+  } catch (err) {
+    console.error("Failed to initialize SQLite database:", err);
   }
 }
 
@@ -166,6 +196,30 @@ app.whenReady().then(() => {
     });
   });
 
+  // ── Database IPC ────────────────────────────────────────────────────────
+  ipcMain.handle('db:getProgress', () => {
+    return new Promise((resolve, reject) => {
+      db.get(`SELECT * FROM progress WHERE id = 1`, (err, row) => {
+        if (err) reject(err);
+        else resolve(row);
+      });
+    });
+  });
+
+  ipcMain.handle('db:saveProgress', (event, data) => {
+    return new Promise((resolve, reject) => {
+      db.run(
+        `UPDATE progress SET currentLevel = ?, totalScore = ?, highestCombo = ?, unlockedThemes = ? WHERE id = 1`,
+        [data.currentLevel, data.totalScore, data.highestCombo, JSON.stringify(data.unlockedThemes)],
+        function(err) {
+          if (err) reject(err);
+          else resolve({ changes: this.changes });
+        }
+      );
+    });
+  });
+
+  setupDatabase();
   createWindow();
   setupAutoUpdater();
 });
